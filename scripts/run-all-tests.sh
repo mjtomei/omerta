@@ -12,6 +12,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 VENV_DIR="$ROOT_DIR/.venv"
 
+# Auto-setup git hooks if not configured
+setup_git_hooks() {
+    local dir="$1"
+    if [[ -d "$dir/.githooks" ]]; then
+        local current_hooks_path=$(cd "$dir" && git config --local core.hooksPath 2>/dev/null || echo "")
+        if [[ "$current_hooks_path" != ".githooks" ]]; then
+            echo "Configuring git hooks for $(basename "$dir")..."
+            (cd "$dir" && git config --local core.hooksPath .githooks)
+        fi
+    fi
+}
+
+# Setup hooks for main repo and all submodules
+setup_git_hooks "$ROOT_DIR"
+for submodule in omerta_lang omerta_mesh omerta_node omerta_protocol; do
+    setup_git_hooks "$ROOT_DIR/$submodule"
+done
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -124,6 +142,29 @@ if [[ "$QUICK_MODE" == false ]]; then
     else
         echo ""
         echo -e "${YELLOW}Swift not found, skipping Swift tests${NC}"
+        echo -e "${YELLOW}To install Swift:${NC}"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            echo "  macOS: Swift is not installed by default. Install via one of:"
+            echo "         1. Install Xcode from the App Store (recommended)"
+            echo "            - Open Xcode after install to accept the license"
+            echo "            - Or run: sudo xcodebuild -license accept"
+            echo "         2. Install Command Line Tools only:"
+            echo "            xcode-select --install"
+            echo "         3. Install via Homebrew:"
+            echo "            brew install swift"
+        elif [[ -f /etc/debian_version ]]; then
+            echo "  Debian/Ubuntu: See https://swift.org/download/"
+            echo "         Or use swiftly: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash"
+        elif [[ -f /etc/arch-release ]]; then
+            echo "  Arch Linux: Use swiftly installer:"
+            echo "         curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash"
+        elif [[ -f /etc/fedora-release ]] || [[ -f /etc/redhat-release ]]; then
+            echo "  Fedora/RHEL: See https://swift.org/download/"
+            echo "         Or use swiftly: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash"
+        else
+            echo "  See https://swift.org/download/ for installation instructions"
+            echo "  Or use the swiftly installer: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash"
+        fi
     fi
 else
     echo ""

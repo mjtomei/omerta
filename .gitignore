@@ -36,6 +36,8 @@ venv/
 # Security audit (contains sensitive findings)
 SECURITY_AUDIT_REPORT.md
 plans/SECURITY_AUDIT_REPORT.md
+SECURITY_AUDIT_CODE_REVIEW.md
+plans/SECURITY_AUDIT_CODE_REVIEW.md
 
 # OS generated files
 Thumbs.db

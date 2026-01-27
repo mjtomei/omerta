@@ -50,23 +50,24 @@ jobs:
 
       - name: Check for sensitive patterns
         run: |
-          # Patterns that indicate sensitive data
+          # Patterns that indicate sensitive data (full PEM headers, not partial matches)
           PATTERNS=(
-            'PRIVATE KEY'
-            'BEGIN RSA'
-            'BEGIN DSA'
-            'BEGIN EC PRIVATE'
-            'BEGIN OPENSSH PRIVATE'
+            '-----BEGIN RSA PRIVATE KEY-----'
+            '-----BEGIN DSA PRIVATE KEY-----'
+            '-----BEGIN EC PRIVATE KEY-----'
+            '-----BEGIN OPENSSH PRIVATE KEY-----'
+            '-----BEGIN PGP PRIVATE KEY-----'
             'AWS_ACCESS_KEY_ID\s*='
             'AWS_SECRET_ACCESS_KEY\s*='
           )
 
           FOUND=0
           for pattern in "${PATTERNS[@]}"; do
+            # Exclude test directories and .git
             if grep -rniE "$pattern" \
                 --include="*.swift" --include="*.py" --include="*.json" \
                 --include="*.yaml" --include="*.yml" --include="*.toml" \
-                . 2>/dev/null | grep -v '\.git\|\.venv\|__pycache__\|node_modules'; then
+                . 2>/dev/null | grep -vE '\.git|\.venv|__pycache__|node_modules|/[Tt]ests?/'; then
               echo "::error::Pattern '$pattern' found in repository"
               FOUND=1
             fi

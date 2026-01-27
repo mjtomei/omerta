@@ -33,6 +33,10 @@ venv/
 # Logs
 *.log
 
+# Security audit (contains sensitive findings)
+SECURITY_AUDIT_REPORT.md
+plans/SECURITY_AUDIT_REPORT.md
+
 # OS generated files
 Thumbs.db
 ehthumbs.db

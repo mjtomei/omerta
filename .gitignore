@@ -1,0 +1,38 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+*.bak
+
+# IDEs
+.idea/
+.vscode/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+
+# Swift/Xcode
+.build/
+DerivedData/
+Package.resolved
+*.xcuserstate
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.env
+
+# Logs
+*.log
+
+# OS generated files
+Thumbs.db
+ehthumbs.db

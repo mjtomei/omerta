@@ -53,22 +53,32 @@ jobs:
     container: ${{ matrix.container }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Python (Debian)
+      # Install git BEFORE checkout so it clones via git (not REST API tarball)
+      - name: Install git (Debian)
         if: contains(matrix.container, 'debian')
         run: |
           apt-get update
-          apt-get install -y python3 python3-pip python3-venv git
+          apt-get install -y git
 
-      - name: Install Python (Fedora)
+      - name: Install git (Fedora)
         if: contains(matrix.container, 'fedora')
-        run: dnf install -y python3 python3-pip git
+        run: dnf install -y git
+
+      - uses: actions/checkout@v4
 
       - name: Checkout public submodules
         run: |
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git submodule update --init --depth=1 omerta_lang omerta_protocol
+
+      - name: Install Python (Debian)
+        if: contains(matrix.container, 'debian')
+        run: |
+          apt-get install -y python3 python3-pip python3-venv
+
+      - name: Install Python (Fedora)
+        if: contains(matrix.container, 'fedora')
+        run: dnf install -y python3 python3-pip
 
       - name: Run tests
         run: |

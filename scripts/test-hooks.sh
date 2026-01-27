@@ -90,11 +90,43 @@ expect_blocked "OpenSSH private key" "test-key.txt" '-----BEGIN OPENSSH PRIVATE 
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUA
 -----END OPENSSH PRIVATE KEY-----'
 
+expect_blocked "PGP private key" "test-key.txt" '-----BEGIN PGP PRIVATE KEY BLOCK-----
+lQPGBGF...
+-----END PGP PRIVATE KEY BLOCK-----'
+
 # API keys and passwords
 expect_blocked "API key assignment" "config.py" 'api_key = "sk-abc123def456ghi789"'
 expect_blocked "Secret key" "settings.py" 'secret_key = "mysupersecret123"'
 expect_blocked "AWS Access Key" "aws.conf" 'AWS_ACCESS_KEY_ID=AKIAREALKEY12345678'
 expect_blocked "AWS Secret Key" "aws.conf" 'AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG'
+
+# GitHub tokens
+expect_blocked "GitHub PAT" "config.txt" 'token=ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789'
+
+# Other service tokens
+expect_blocked "Stripe live key" "config.py" 'stripe_key = "sk_live_abcdef123456"'
+expect_blocked "Slack token" "config.py" 'slack = "xoxb-123456789-abcdefghij"'
+expect_blocked "npm token" "npmrc" '//registry.npmjs.org/:_authToken=npm_aBcDeFgHiJkLmNoPqRsTuVwXyZ012345'
+
+# Credentials in URLs
+expect_blocked "Password in URL" "config.py" 'db_url = "postgres://admin:secretpass@localhost/db"'
+
+# Bearer tokens
+expect_blocked "Bearer token" "api.py" 'headers = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdef"}'
+
+echo ""
+echo "--- Pre-commit: Blocked File Extensions ---"
+echo ""
+
+# Key file extensions
+expect_blocked ".pem file" "server.pem" 'certificate content'
+expect_blocked ".key file" "private.key" 'key content'
+expect_blocked ".p12 file" "cert.p12" 'pkcs12 content'
+expect_blocked "id_rsa file" "id_rsa" 'ssh key content'
+
+echo ""
+echo "--- Pre-commit: False Positives (should be allowed) ---"
+echo ""
 
 # False positives that should be allowed
 expect_allowed "Placeholder API key" "docs.md" 'api_key = "YOUR_API_KEY_HERE"'
@@ -102,6 +134,7 @@ expect_allowed "Template password" "template.yaml" 'password: <your-password-her
 expect_allowed "Normal code" "app.py" 'def get_user():
     return {"name": "test"}'
 expect_allowed "Comment with example" "config.py" '# Example: api_key = "your_key_here"'
+expect_allowed "Public key file" "server.pub" 'ssh-rsa AAAAB3NzaC1yc2E...'
 
 # Test in submodule if available
 if [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then

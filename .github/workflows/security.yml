@@ -13,8 +13,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Checkout public submodules
+        run: |
+          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Test hook functionality
         run: ./scripts/test-hooks.sh
@@ -25,8 +27,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Checkout public submodules
+        run: |
+          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Verify hooks are in sync
         run: ./scripts/check-hooks-sync.sh
@@ -38,8 +42,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
+
+      - name: Checkout public submodules
+        run: |
+          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Check for sensitive patterns
         run: |
@@ -78,8 +85,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Checkout public submodules
+        run: |
+          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Check for large files
         run: |
@@ -104,8 +113,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Checkout public submodules
+        run: |
+          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Check for key files
         run: |

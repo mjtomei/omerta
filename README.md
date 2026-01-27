@@ -65,6 +65,14 @@ Protocol specifications and simulation infrastructure.
 - **Papers**: Economic analysis, mechanism design documents
 - **Testing**: `pytest simulations/tests/`
 
+### [omerta_infra](omerta_infra/)
+
+Infrastructure and deployment code for bootstrap servers.
+
+- **Terraform**: EC2 instances, Route53 DNS, security groups
+- **Scripts**: Build, deploy, and network initialization
+- **Documentation**: Setup guides and IAM policies
+
 ---
 
 ## Documentation

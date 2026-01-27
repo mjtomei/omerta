@@ -10,3 +10,6 @@
 [submodule "omerta_protocol"]
 	path = omerta_protocol
 	url = ../omerta_protocol
+[submodule "omerta_infra"]
+	path = omerta_infra
+	url = ../omerta_infra

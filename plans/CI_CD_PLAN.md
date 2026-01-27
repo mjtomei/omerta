@@ -433,6 +433,16 @@ jobs:
 
       - name: Verify hooks are in sync across repos
         run: ./scripts/check-hooks-sync.sh
+
+  hooks-functionality-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Test hook functionality
+        run: ./scripts/test-hooks.sh
 ```
 
 ### 4. Release Builds (`build-release.yml`)
@@ -751,6 +761,7 @@ xcrun llvm-cov export -format="lcov" \
 | git-secrets scan | CI | PR merge |
 | Binary file detection | CI | No (warning only) |
 | Hooks sync check | CI | PR merge |
+| Hooks functionality test | CI | PR merge |
 
 ---
 

@@ -45,8 +45,8 @@ PATTERNS=(
     'npm_[A-Za-z0-9]{36}'
     'pypi-[A-Za-z0-9_-]+'
 
-    # Credentials in URLs
-    'https?://[^:]+:[^@]+@'
+    # Credentials in URLs (any protocol)
+    '://[^/:]+:[^@]+@'
 
     # Bearer tokens (20+ chars to reduce false positives)
     '[Bb]earer\s+[A-Za-z0-9_-]{20,}'
@@ -60,10 +60,10 @@ BLOCKED_EXTENSIONS=(
     '\.pfx$'
     '\.keystore$'
     '\.jks$'
-    '\.id_rsa$'
-    '\.id_dsa$'
-    '\.id_ecdsa$'
-    '\.id_ed25519$'
+    'id_rsa$'
+    'id_dsa$'
+    'id_ecdsa$'
+    'id_ed25519$'
 )
 
 # Get list of staged files

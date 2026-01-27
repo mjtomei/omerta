@@ -106,7 +106,7 @@ expect_blocked "GitHub PAT" "config.txt" 'token=ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ01
 # Other service tokens
 expect_blocked "Stripe live key" "config.py" 'stripe_key = "sk_live_abcdef123456"'
 expect_blocked "Slack token" "config.py" 'slack = "xoxb-123456789-abcdefghij"'
-expect_blocked "npm token" "npmrc" '//registry.npmjs.org/:_authToken=npm_aBcDeFgHiJkLmNoPqRsTuVwXyZ012345'
+expect_blocked "npm token" "npmrc" '//registry.npmjs.org/:_authToken=npm_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789'
 
 # Credentials in URLs
 expect_blocked "Password in URL" "config.py" 'db_url = "postgres://admin:secretpass@localhost/db"'

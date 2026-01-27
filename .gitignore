@@ -42,3 +42,5 @@ plans/SECURITY_AUDIT_CODE_REVIEW.md
 # OS generated files
 Thumbs.db
 ehthumbs.db
+._*
+.DS_Store

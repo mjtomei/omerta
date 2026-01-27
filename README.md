@@ -71,13 +71,18 @@ Protocol specifications and simulation infrastructure.
 
 ### Papers
 
+Polished documents intended for external consumption by humans and machines.
+
 - [WHITEPAPER.md](papers/WHITEPAPER.md) - Technical whitepaper with literature review
 - [papers/paper/](papers/paper/) - LaTeX source for academic paper
-- [papers/reviews/](papers/reviews/) - Review cycles and responses
 
 ### Plans
 
-Project-wide design documents are in [plans/](plans/). Repository-specific plans are in each submodule's `plans/` directory.
+Working documents for development - design docs, implementation plans, review cycles.
+
+- [plans/](plans/) - Project-wide plans and design documents
+- [plans/reviews/](plans/reviews/) - Paper review cycles and responses
+- Each submodule has its own `plans/` directory for repo-specific documentation
 
 ---
 
@@ -95,6 +100,13 @@ git submodule update --init --recursive
 
 ### Running Tests
 
+Run all tests:
+```bash
+./scripts/run-all-tests.sh        # All tests
+./scripts/run-all-tests.sh --quick  # Python tests only (faster)
+```
+
+Or run individually:
 ```bash
 # Node (Swift)
 cd omerta_node && swift test

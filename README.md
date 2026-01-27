@@ -73,8 +73,10 @@ Protocol specifications and simulation infrastructure.
 
 Polished documents intended for external consumption by humans and machines.
 
-- [WHITEPAPER.md](papers/WHITEPAPER.md) - Technical whitepaper with literature review
-- [papers/paper/](papers/paper/) - LaTeX source for academic paper
+- [Whitepaper](papers/whitepaper.pdf) - Technical whitepaper (Abstract, Introduction, Related Work)
+- [Full Paper](papers/participation-verification.pdf) - Complete technical paper with all sections
+
+LaTeX sources are in [papers/](papers/) with modular sections in [papers/sections/](papers/sections/).
 
 ### Plans
 

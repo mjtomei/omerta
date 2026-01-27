@@ -1,0 +1,25 @@
+% Appendix: Key Parameters
+
+\appendix
+
+\section{Key Parameters}
+\label{sec:appendix-parameters}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Parameter} & \textbf{Description} & \textbf{Typical Range} \\
+\midrule
+$K_{\text{PAYMENT}}$ & Payment curve slope & 0.01 -- 0.10 \\
+$K_{\text{TRANSFER}}$ & Transfer burn slope & 0.01 -- 0.10 \\
+AGE\_MATURITY\_DAYS & Days to full trust potential & 90 -- 180 \\
+DAILY\_MINT & Coins minted per day & Decreasing schedule \\
+ISOLATION\_THRESHOLD & Sybil cluster detection & 0.7 -- 0.9 \\
+TRANSITIVITY\_DECAY & Trust decay per hop & 0.5 -- 0.8 \\
+DAMPENING\_FACTOR & Policy adjustment scaling & 0.1 -- 0.5 \\
+\bottomrule
+\end{tabular}
+\caption{Key system parameters and typical ranges}
+\label{tab:key-parameters}
+\end{table}

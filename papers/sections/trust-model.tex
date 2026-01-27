@@ -1,0 +1,114 @@
+% Section 4: Trust Model
+
+\section{Trust Model}
+\label{sec:trust-model}
+
+Trust in Omerta derives from verified transactions, not subjective ratings. This dramatically reduces the fake feedback attack surface while actually increasing data richness through continuous objective measurement rather than occasional subjective ratings. For compute markets, where delivery can be objectively verified, this approach is well-suited.
+
+\subsection{Trust Accumulation}
+\label{subsec:trust-accumulation}
+
+Each identity accumulates a \textbf{base trust score} ($T_{base}$) representing their track record in the network. This score has two components: trust earned from completing transactions ($T_{transactions}$) and adjustments from explicit assertions by other participants ($T_{assertions}$).
+
+\begin{equation}
+T_{base} = T_{transactions} + T_{assertions}
+\end{equation}
+
+\textbf{Why this formulation?} Transactions are objective and machine-verifiable---either the compute was delivered or it wasn't. Assertions handle everything else: exceptional performance, suspected manipulation, off-chain behavior. By separating these, we keep the core trust signal clean while allowing for human judgment where needed.
+
+\begin{equation}
+T_{transactions} = \sum_i \left( \text{CREDIT} \times \text{resource\_weight}_i \times \text{duration}_i \times \text{verification\_score}_i \times \text{cluster\_weight}_i \right)
+\end{equation}
+
+Each completed transaction contributes to trust. The terms normalize and weight this contribution: resource weights account for different compute types (a GPU hour is worth more than a CPU hour), duration captures commitment length, verification scores reflect audit outcomes (did resources match claims?), and cluster weights downweight transactions suspected of being within Sybil clusters.
+
+Assertion-based trust adjusts for reported incidents:
+
+\begin{equation}
+T_{assertions} = \sum_i \left( \text{score}_i \times \text{credibility}_i \times \text{decay}_i \right)
+\end{equation}
+
+Assertions are signed reports of specific incidents with scores in $[-1, 1]$. Positive scores (commendations) add trust; negative scores (violations) subtract. Credibility derives from the asserter's own trust, creating recursive dependency resolved through iterative computation.
+
+\subsection{Age as Derate Factor}
+\label{subsec:age-derate}
+
+A critical design choice: age should \textbf{never add trust}, only remove a penalty from young identities:
+
+\begin{equation}
+T_{effective} = T_{base} \times \text{age\_derate}
+\end{equation}
+
+\begin{equation}
+\text{age\_derate} = \min\left(1.0, \frac{\text{identity\_age}}{\text{AGE\_MATURITY\_DAYS}}\right)
+\end{equation}
+
+New identities start at zero effective trust regardless of transaction volume. This prevents attackers from pre-creating dormant identities that accumulate trust through mere existence. You can only earn trust by participating over time.
+
+\textbf{Why linear?} We considered alternatives: exponential growth (fast early gains, slow later) favors new users but makes age easily purchased; logarithmic (slow early, faster later) is harsh on newcomers and may discourage participation. Linear provides predictable progress: a 30-day-old identity at 33\% has exactly one-third the age credit of a 90-day identity. The simplicity also makes the system easier to reason about---both for participants and attackers calculating costs.
+
+\subsection{Local Trust Computation}
+\label{subsec:local-trust}
+
+Trust is not global. Each observer computes trust relative to their position in the network:
+
+\begin{equation}
+T(\text{subject}, \text{observer}) = T_{direct} + T_{transitive}
+\end{equation}
+
+\begin{equation}
+T_{transitive} = \sum_{\text{intermediary}} T(\text{intermediary}, \text{observer}) \times T(\text{subject}, \text{intermediary}) \times \text{DECAY}^{\text{path\_length}}
+\end{equation}
+
+Direct trust comes from personal transaction history. Transitive trust propagates through trusted intermediaries with exponential decay per hop.
+
+\textbf{Why this matters}: An attacker cannot build trust in Community A and exploit it in Community B. Observers in B see the attacker's trust discounted by lack of network path. The attacker must build trust directly with each community they wish to exploit---exactly how human trust works.
+
+\subsubsection{Trust Propagation Example}
+
+Consider a small network where Alice wants to assess trust in Dave:
+
+\begin{verbatim}
+    Alice ----0.8----> Bob ----0.7----> Dave
+      |                                  ^
+      +-------0.6-----> Carol ---0.9----+
+\end{verbatim}
+
+Alice has direct trust 0.8 in Bob and 0.6 in Carol. Bob has 0.7 trust in Dave; Carol has 0.9 trust in Dave. Alice has no direct transactions with Dave.
+
+With DECAY = 0.5 per hop, Alice computes trust in Dave:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Path} & \textbf{Calculation} & \textbf{Contribution} \\
+\midrule
+Alice $\rightarrow$ Bob $\rightarrow$ Dave & $0.8 \times 0.7 \times 0.5^1$ & 0.280 \\
+Alice $\rightarrow$ Carol $\rightarrow$ Dave & $0.6 \times 0.9 \times 0.5^1$ & 0.270 \\
+\midrule
+\textbf{Total transitive trust} & & \textbf{0.550} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Now consider Eve, who has built 0.95 trust with a separate community but has no path to Alice's network:
+
+\begin{verbatim}
+    Alice ----0.8----> Bob          Eve (0.95 in other community)
+      |                              |
+      +-------0.6-----> Carol        (no path to Alice's network)
+\end{verbatim}
+
+Alice's trust in Eve = 0.0 (no path). Eve's high reputation elsewhere is invisible to Alice. This is the core Sybil defense: trust must be earned locally, not imported.
+
+\subsection{Parameterized Infractions}
+\label{subsec:parameterized-infractions}
+
+Not all violations are equal. Infraction severity scales with potential network impact:
+
+\begin{equation}
+\text{effective\_score} = \text{base\_score} \times \text{impact\_multiplier} \times \text{context\_multiplier}
+\end{equation}
+
+Impact scales with transaction value, resources affected, and duration. Context includes repeat offense history. This creates appropriate gray areas---small mistakes don't destroy trust, while large attacks risk proportional penalties.

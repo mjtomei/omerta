@@ -1,0 +1,103 @@
+% Introduction section - shared between whitepaper and full paper
+
+\section{Introduction}
+
+The vision of decentralized computing---where anyone can contribute resources and anyone can consume them, without intermediaries extracting rents---has motivated decades of research. The core challenge is threefold: protecting against the rare bad actors who spoil cooperation for everyone, reducing the technical barriers that have limited participation to experts, and making the experience simple enough to be worthwhile. The practical reality is that most participants in even ``trustless'' systems don't write their own code---they trust wallet software, exchange interfaces, and protocol implementations written by others. The question is not whether to trust, but whom, how much, and at what cost.
+
+\subsection{A Brief History of Trust Systems}
+
+The question of computational trust saw intensive research in the early 2000s, driven by the rise of peer-to-peer file sharing networks and online marketplaces. Researchers developed algorithms to compute reputation scores, integrate multiple trust sources, reason under uncertainty, and detect manipulation. This body of work established core insights that remain valid: trust propagates through networks with decay; local computation can substitute for global consensus; time and history provide unforgeable credentials; and detection of manipulation patterns enables defensive responses. (See Section~\ref{sec:related} for detailed treatment of specific systems.)
+
+\textbf{Yet these systems were never widely deployed.} They remained academic exercises---published, cited, and largely forgotten in practice. Why?
+
+First, they were purely reputational. EigenTrust computed trust scores, but those scores didn't connect to payments, incentives, or economic flows. Trust was a number with no consequences. Without economic integration, there was no compelling reason to deploy them.
+
+Second, they lacked a killer application. P2P file sharing---the motivating use case---didn't have the economics to justify sophisticated trust systems. Free music downloads didn't require trustworthy cooperation; users would simply try another node. The theory outpaced the need.
+
+Third, and perhaps most importantly, blockchain arrived. Bitcoin (2008) appeared to solve the trust problem through cryptographic consensus. Research attention shifted. Why model trust computationally when proof-of-work could enforce cooperation mathematically? The reputation systems literature quieted.
+
+A decade later, we understand blockchain's limitations more clearly. Budish~\cite{budish2024} demonstrated that blockchain security has inherent economic limits---the recurring costs of running a secure blockchain must be large relative to the value at stake, making it expensive for high-value applications. Proof-of-stake faces similar constraints~\cite{gans2019}. Existing decentralized compute networks built on blockchain (Golem~\cite{golem}, iExec~\cite{iexec}) have struggled with adoption despite years of operation. The costs of global consensus may exceed what many applications require.
+
+Meanwhile, machine intelligence has advanced dramatically. Tasks that seemed intractable---modeling complex behavior, tuning parameters across high-dimensional spaces, generating explanations for decisions---are now feasible. This creates an opportunity: \textbf{the trust systems research of 2000--2010 may be ready for practical implementation, enabled by machine intelligence capabilities that didn't exist when the theory was developed.}
+
+Omerta represents an attempt at this synthesis. We return to the trust-based approaches developed before blockchain's dominance, informed by what we've learned since, and enabled by machine intelligence to handle the complexity that made pure implementation difficult.
+
+\subsection{Three Paths}
+
+Traditional approaches fall into two categories. \textbf{Trusted intermediary} models, exemplified by cloud computing providers, centralize authority in organizations that can enforce contracts and punish misbehavior. This works but introduces single points of failure, censorship risk, and rent extraction. \textbf{Blockchain-based} models, exemplified by Ethereum and its descendants, replace trusted intermediaries with cryptographic consensus protocols that theoretically eliminate the need for trust. This also works but imposes significant costs: massive energy expenditure (proof-of-work), capital lockup requirements (proof-of-stake), limited transaction throughput, and delayed finality.
+
+Between these extremes lies a spectrum of approaches trading trust for cost. Fully homomorphic encryption (FHE) and multi-party computation (MPC) enable trustless computation but with 1,000--1,000,000$\times$ overhead. Trusted execution environments (TEEs) like Intel SGX reduce overhead but trust hardware manufacturers. Layer-2 solutions (rollups, sidechains) inherit security from a base chain while improving throughput, but still pay consensus costs. Smart contracts execute deterministically but are limited to on-chain data and simple computations.
+
+We propose a third path---or rather, we return to one that was overshadowed. Omerta is a trust-based distributed compute network that neither centralizes authority nor attempts to eliminate trust. Instead, it makes trust \emph{subjective}, \emph{local}, and \emph{earned}---computed by each participant from their own position in the network, based on verifiable on-chain data accumulated over time. This approach builds directly on EigenTrust, FIRE, and related work, while making specific adaptations for compute markets and leveraging machine intelligence for implementation.
+
+\subsection{The Trust Spectrum}
+
+Trustlessness is not binary---it exists on a spectrum. Proof-of-work and proof-of-stake mechanisms genuinely increase trustlessness compared to centralized alternatives. They represent real achievements in distributed systems research. However, historical episodes reveal that a social layer always remains:
+
+\textbf{The DAO Hack (2016)}: An attacker exploited a smart contract vulnerability to drain \$60 million from The DAO. The Ethereum community responded with a hard fork that reversed the theft---creating Ethereum (rolled back) and Ethereum Classic (preserved the ``immutable'' history). The community chose social consensus over mechanical execution.
+
+\textbf{Bitcoin Value Overflow (2010)}: A bug created 184 billion bitcoins out of thin air. Developers and node operators coordinated to deploy a fix and roll back the chain. Human judgment overrode the protocol when stakes were high enough.
+
+These interventions were controversial---but the social layer can also work as intended:
+
+\textbf{Exchange Coordination}: When exchanges collectively delist contentious tokens or coordinate responses to theft, they demonstrate genuine community action in support of shared values. This is humans exercising collective judgment when protocol alone is insufficient, and it represents the system working, not failing.
+
+These episodes do not invalidate blockchain achievements. Rather, they reveal that we operate on a spectrum from full trust (centralized authority) to reduced trust (cryptographic consensus) to some irreducible social layer. Sometimes that social layer intervenes controversially; sometimes it acts in clear support of community values. No practical system reaches the zero-trust endpoint---nor should it.
+
+\textbf{The question becomes}: given that we cannot achieve absolute trustlessness anyway, what are we paying for the trustlessness we do achieve? And could we relax our requirements slightly to capture most of the practical benefit at dramatically lower cost?
+
+This is the same reasoning that motivates ephemeral compute over fully homomorphic encryption (FHE). FHE provides the ultimate guarantee: compute on encrypted data without ever decrypting it. No trust in the compute provider required. But FHE imposes 1,000--1,000,000$\times$ computational overhead~\cite{gentry2009}, making it impractical for most workloads. Ephemeral compute---where data exists briefly on untrusted hardware with verification and economic penalties---provides weaker guarantees but serves far more use cases at practical cost.
+
+Omerta applies this spectrum thinking to consensus itself. Blockchain consensus mechanisms genuinely reduce trust requirements, but at significant cost: energy expenditure (PoW), capital lockup (PoS), limited throughput, and delayed finality. We ask: for compute markets specifically, can we relax the global consensus requirement while preserving the practical security properties that matter?
+
+Our hypothesis is yes. Compute markets do not require global agreement---they require pairwise trust between specific buyers and sellers. By computing trust locally rather than achieving global consensus, Omerta aims to capture most of the practical benefit of decentralization at dramatically lower cost, making trustworthy compute sharing accessible to more people.
+
+Compute is also uniquely suited to trust-based systems because of the nature of the goods being traded:
+
+\begin{itemize}
+    \item \textbf{Revocable}: Providers can reclaim their machines at any time. Unlike transferring money or physical goods, access can be terminated instantly.
+    \item \textbf{Low stakes per transaction}: Each session consumes only a bit of time, energy, and wear. No single transaction is catastrophic.
+    \item \textbf{Already sunk costs}: Most home computers sit idle---owners have already paid for hardware, electricity, and internet. The marginal loss from a bad transaction is minimal.
+    \item \textbf{Verifiable during execution}: Compute can be checked while running through heartbeats, random audits, and result validation. Fraud is detectable, not just punishable after the fact.
+\end{itemize}
+
+These properties make compute an ideal domain for experimenting with trust-based systems. The downside risk is bounded, the verification is tractable, and the resources were often going unused anyway.
+
+\subsection{Our Contribution}
+
+This paper's primary contribution is a \textbf{practical synthesis}---bringing established trust system research into implementation for compute markets. We distinguish between mechanisms adapted from prior work and novel contributions:
+
+\textbf{Adapted from prior work (with modifications):}
+
+\begin{enumerate}
+    \item \textbf{Local trust computation} extending EigenTrust~\cite{kamvar2003}, TidalTrust~\cite{golbeck2005}, and path-based approaches~\cite{xiong2004,zhou2007}. Where EigenTrust computes global scores, Omerta computes trust relative to each observer---a design approach with substantial prior art~\cite{golbeck2005} that we apply to compute markets.
+
+    \item \textbf{Trust propagation with decay}, a standard technique in graph-based trust systems~\cite{kamvar2003,huynh2006,zhou2007}, applied here to transaction histories rather than explicit ratings.
+
+    \item \textbf{Age-based Sybil resistance}, building on temporal defense mechanisms discussed since Douceur's original Sybil attack paper~\cite{douceur2002} and whitewashing analysis~\cite{friedman2001}. We note that this defense has known limitations (Section~\ref{sec:limitations}).
+
+    \item \textbf{Cluster detection for Sybil defense}, applying standard anomaly detection techniques~\cite{yu2006,danezis2009} to transaction graph analysis.
+\end{enumerate}
+
+\textbf{Novel contributions:}
+
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \textbf{Economic mechanisms integrated with trust}. Prior reputation systems (EigenTrust, TidalTrust, FIRE, PowerTrust) are purely reputational---they compute scores but don't connect them to economic flows. Even TrustChain~\cite{trustchain}, which uses bandwidth tokens, doesn't tie token mechanics to trust scores. Omerta introduces:
+    \begin{itemize}
+        \item \emph{Trust-based payment splits}: Provider earnings scale with trust score via an asymptotic formula
+        \item \emph{Transfer burns}: Coin transfers taxed based on minimum trust, preventing reputation laundering
+        \item \emph{Trust-proportional distribution}: Daily coin minting distributed proportionally to trust scores
+        \item \emph{Negative bids}: Providers can burn coins to accelerate trust building through verified work
+    \end{itemize}
+
+    \item \textbf{Structured accusation mechanism}. Prior systems use binary ratings or simple scores. Omerta's trust assertions include evidence hashes, derive credibility from the asserter's own trust (recursive), and apply impact/context multipliers for appropriate gray areas. This enables nuanced handling of infractions.
+
+    \item \textbf{Double-spend resolution via currency weight}. Since we detect double-spends rather than prevent them, transaction finality depends on how quickly conflicting transactions would be discovered. Omerta introduces ``currency weight''---the confidence level required before a transaction is considered final---that scales with network connectivity.
+
+    \item \textbf{On-chain verification logs}. Prior systems record transactions or ratings, but not third-party verification results. Omerta stores verification outcomes on-chain, enabling trust computation to incorporate objective performance data rather than only self-reported transactions.
+
+    \item \textbf{Application to compute markets}. The specific integration of trust, payment, verification, order book, and session lifecycle mechanisms for decentralized compute rental is novel, though individual components draw on established work.
+
+    \item \textbf{Machine-native trust measurement}. Prior reputation systems (eBay, EigenTrust, FIRE) assumed humans would rate each other---clicking stars, leaving feedback, issuing certifications. Omerta assumes trust signals are generated automatically from verified transaction outcomes. Human input comes through engineering the automation and reviewing edge cases, not through direct rating. This enables trust measurement at scales and frequencies that human rating could never achieve.
+\end{enumerate}

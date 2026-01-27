@@ -1,0 +1,68 @@
+% Section 3: System Architecture
+
+\section{System Architecture}
+\label{sec:system-architecture}
+
+Having established the theoretical foundations Omerta draws upon, we now describe the system's concrete architecture. The design translates the trust and economic principles discussed above into specific data structures, protocols, and market mechanisms.
+
+\subsection{Design Principles}
+\label{subsec:design-principles}
+
+Omerta is built on several core principles:
+
+\textbf{Free Software, No Rent Extraction}: The Omerta software is open source and free to use. There are no platform fees, no token preallocation, no founder stake. Participants earn their position through contribution, not investment. This removes the extractive economics that plagued prior decentralized compute platforms.
+
+\textbf{Verifiable Facts, Subjective Trust}: The blockchain stores facts (transactions, verification logs, assertions). Trust scores are computed locally by each participant from these facts according to their own criteria.
+
+\textbf{Identity Age as Credential}: Of all possible credentials, only time-on-chain cannot be manufactured. New identities start with nothing and must earn trust through participation.
+
+\textbf{Uniform Pricing, Trust-Based Splits}: All consumers pay the same market rate. Trust determines how payments split between provider and burn. High trust = more to provider. Low trust = more burned.
+
+\textbf{Earned Write Permission}: Only identities above trust thresholds can write to the chain, with conflict resolution through trust-weighted voting. Trust score IS the stake.
+
+\subsection{On-Chain Data}
+\label{subsec:on-chain-data}
+
+The blockchain records five types of data:
+
+\textbf{Identity Records}: Public key, creation timestamp, and signature capabilities. All derived data (age, transaction count, trust scores) is computed from other records.
+
+\textbf{Transactions}: Consumer and provider identities, amounts paid/received/burned, resource specifications, duration, and signatures from both parties.
+
+\textbf{Verification Logs}: Results of resource checks, including verifier identity, claimed vs.\ measured resources, pass/fail result, and verifier signature.
+
+\textbf{Trust Assertions}: Signed claims by one identity about another, including score, classification (positive or negative), evidence hashes, and reasoning.
+
+\textbf{Order Book}: Bids and asks for compute resources, enabling price discovery through market mechanisms.
+
+\subsection{Market Structure}
+\label{subsec:market-structure}
+
+Omerta implements an on-chain order book for price discovery:
+
+\textbf{Order Types}: Bids (consumer wants to buy) and asks (provider wants to sell), with resource specifications, price, duration constraints, and expiration.
+
+\textbf{Resource Classes}: Standardized categories (small\_cpu, medium\_cpu, gpu\_consumer, gpu\_datacenter) enabling liquidity aggregation.
+
+\textbf{Matching Engine}: Price-time priority matching. When orders cross, sessions initiate and escrow triggers.
+
+\textbf{Spot Rate}: Volume-weighted average of recent trades, providing simple consumer-facing pricing while preserving price discovery.
+
+Consumers see simple pricing (``8 cores = 0.09 OMC/hr'') without needing to understand the underlying market mechanics.
+
+\subsection{Session Lifecycle}
+\label{subsec:session-lifecycle}
+
+A compute session proceeds as follows:
+
+\begin{enumerate}
+    \item \textbf{Order Placement}: Consumer places bid or provider places ask
+    \item \textbf{Matching}: Orders cross, session initiates
+    \item \textbf{Escrow Lock}: Consumer's payment locked in escrow
+    \item \textbf{VM Configuration}: Provider configures VM with consumer's identity key for access
+    \item \textbf{Compute Execution}: Consumer uses resources
+    \item \textbf{Verification}: Random audits check resource claims
+    \item \textbf{Settlement}: Escrow released based on outcome and trust scores
+\end{enumerate}
+
+Either party can terminate at any time---the market handles quality through consumer exit and provider reliability signals.

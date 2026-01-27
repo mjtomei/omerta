@@ -1,0 +1,342 @@
+% Section 8: Discussion
+
+\section{Discussion}
+\label{sec:discussion}
+
+The preceding sections described Omerta's architecture, trust model, economic mechanisms, defenses, and simulation results. This section steps back to discuss the broader context: where Omerta sits on the spectrum of trust-cost tradeoffs, what it achieves compared to alternatives, the limitations we acknowledge, and the methodological approach that enabled this design.
+
+\subsection{The Trust-Cost Spectrum}
+\label{subsec:trust-cost-spectrum}
+
+Different approaches occupy different positions on the trust-cost spectrum:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Approach} & \textbf{Trust Required} & \textbf{Cost} & \textbf{Practical Scope} \\
+\midrule
+Centralized cloud & High (trust provider) & Low & Broad \\
+FHE & None & Extreme (1000x+) & Very narrow \\
+TEE (SGX) & Medium (trust hardware) & Low-Medium & Medium \\
+PoW blockchain & Low & High (energy) & Medium \\
+PoS blockchain & Low-Medium & Medium (capital) & Medium \\
+\textbf{Omerta} & Medium (trust earned) & Low & Broad \\
+\bottomrule
+\end{tabular}
+\caption{Trust-cost tradeoffs across approaches}
+\label{tab:trust-cost}
+\end{table}
+
+The key insight is that blockchain approaches---while genuinely reducing trust requirements---may not occupy the optimal point for compute markets. They pay significant costs (energy, capital, throughput limits) for global consensus that compute markets may not need.
+
+\subsection{What Blockchain Achieves}
+\label{subsec:blockchain-achieves}
+
+We should be precise about what blockchain consensus mechanisms accomplish:
+
+\textbf{Genuine achievements}:
+\begin{itemize}
+    \item Coordination without designated coordinator
+    \item Resistance to unilateral censorship
+    \item Auditable history without trusted record-keeper
+    \item Credible monetary policy without central bank
+\end{itemize}
+
+These are real and valuable. PoW and PoS represent genuine advances in reducing trust requirements.
+
+\textbf{What the historical episodes reveal}:
+\begin{itemize}
+    \item The spectrum has no zero-trust endpoint in practice
+    \item Social consensus remains available when stakes are high enough
+    \item This doesn't invalidate the achievements---it bounds them
+\end{itemize}
+
+\subsection{Omerta's Position}
+\label{subsec:omerta-position}
+
+Omerta bets that for compute markets specifically, we can relax global consensus while preserving the properties that matter:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Property} & \textbf{Blockchain} & \textbf{Omerta} & \textbf{Trade-off} \\
+\midrule
+Double-spend prevention & Global UTXO consensus & Escrow locks & Equivalent for sessions \\
+History integrity & PoW/PoS difficulty & Trust-weighted writes & Weaker globally, sufficient locally \\
+Sybil resistance & Computational/capital cost & Time cost (age) & Different attack economics \\
+Censorship resistance & Anyone can mine/stake & Trust threshold & Requires earning entry \\
+\bottomrule
+\end{tabular}
+\caption{Property comparison: blockchain vs.\ Omerta}
+\label{tab:property-comparison}
+\end{table}
+
+The hypothesis is that these trade-offs are acceptable for compute markets, where:
+\begin{itemize}
+    \item Transactions are bilateral (buyer-seller), not global transfers
+    \item Sessions are ephemeral, not permanent state
+    \item Verification is possible during execution
+    \item Reputation has natural meaning (did you deliver?)
+\end{itemize}
+
+\subsection{Analogy to FHE vs.\ Ephemeral Compute}
+\label{subsec:fhe-analogy}
+
+The relationship between Omerta and blockchain mirrors the relationship between ephemeral compute and FHE:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+& \textbf{Maximum Guarantee} & \textbf{Practical Alternative} \\
+\midrule
+\textbf{Data privacy} & FHE (compute on encrypted) & Ephemeral compute (brief exposure + verification) \\
+\textbf{Consensus} & Global Byzantine (PoW/PoS) & Local trust (Omerta) \\
+\textbf{Cost} & 1000x+ overhead & Near-native performance \\
+\textbf{Accessibility} & Narrow applications & Broad applicability \\
+\bottomrule
+\end{tabular}
+\caption{Maximum guarantees vs.\ practical alternatives}
+\label{tab:fhe-analogy}
+\end{table}
+
+In both cases, relaxing the maximum guarantee enables serving far more users at practical cost. The question is whether the relaxed guarantee is sufficient for the use case.
+
+\subsection{Making the Social Layer Explicit}
+\label{subsec:social-layer}
+
+This tradeoff raises a deeper question: if we're accepting some trust requirements anyway, should we make them explicit rather than hidden?
+
+Every distributed system ultimately has a social layer. Bitcoin's ledger has been modified by human coordination. Ethereum's code yielded to community override. The question is not whether humans are trusted, but which humans and how.
+
+Omerta makes this explicit rather than hiding it beneath claims of mathematical trustlessness. Trust relationships are tracked on-chain. Incentives align through economics. Bad actors are identified over time. This mirrors how working human institutions operate---imperfect rules made workable through aligned incentives.
+
+\subsection{Interoperability Across the Spectrum}
+\label{subsec:interoperability}
+
+Making the social layer explicit also clarifies where different systems fit---and how they might work together.
+
+Different points on the trust-cost spectrum suit different use cases. A mature ecosystem might include multiple networks that interoperate, with value and workloads flowing to appropriate trust levels.
+
+\subsubsection{Use Cases by Trust Level}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Trust Level} & \textbf{Example Use Cases} & \textbf{Why This Level} \\
+\midrule
+Maximum (FHE/MPC) & Medical records, financial audits, voting & Data must never be exposed \\
+High (PoW/PoS) & Digital currency, smart contracts, settlements & Global consensus needed \\
+Medium (Omerta-style) & Compute rental, batch processing, CI/CD & Bilateral, ephemeral, verifiable \\
+Lower (reputation only) & Content delivery, caching, non-sensitive & Speed over guarantees \\
+\bottomrule
+\end{tabular}
+\caption{Use cases by trust level}
+\label{tab:use-cases}
+\end{table}
+
+\subsubsection{Cross-Network Flows}
+
+Networks at different trust levels can bridge to each other:
+
+\begin{itemize}
+    \item \textbf{Settlement on high-trust chains}: An Omerta-style network could settle periodic summaries to a PoS blockchain, gaining the permanence guarantees of global consensus for aggregate state while handling high-frequency bilateral transactions locally.
+
+    \item \textbf{Escalation for disputes}: Normal compute sessions run on medium-trust infrastructure. Disputed sessions escalate to higher-trust arbitration---perhaps a smart contract on Ethereum that evaluates cryptographic evidence.
+
+    \item \textbf{Sensitive workload isolation}: A pipeline might run preprocessing on Omerta (cheap, fast), then route sensitive computation to FHE or TEE enclaves, then aggregate results back on Omerta.
+
+    \item \textbf{Trust bootstrapping}: New participants could establish initial reputation on a high-trust chain (where Sybil attacks are expensive), then bridge that identity to lower-cost networks.
+\end{itemize}
+
+A mature ecosystem stratifies: users and workloads flow to appropriate trust levels based on actual security requirements, paying only for the guarantees they need.
+
+\subsection{Scaling Trust: From Villages to Global Networks}
+\label{subsec:scaling-trust}
+
+Why does this spectrum exist at all? The trust-cost tradeoff is not unique to computer systems---it mirrors how human societies have always operated:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Society Scale} & \textbf{Trust Mechanism} & \textbf{Overhead} \\
+\midrule
+Village (50) & Everyone knows everyone; gossip spreads instantly & Minimal \\
+Town (5,000) & Reputation networks; friends-of-friends & Low \\
+City (500,000) & Institutions track reputation; courts enforce & Medium \\
+Nation (50M+) & Anonymous transactions; verification required & High \\
+Global & No shared context & Highest \\
+\bottomrule
+\end{tabular}
+\caption{Trust mechanisms by society scale}
+\label{tab:society-scale}
+\end{table}
+
+As communities grew beyond the scale where everyone could know everyone, \textbf{visibility decreased} and \textbf{trust costs increased}. The lightweight mechanisms that worked in villages---verbal agreements, handshakes, reputation by gossip---don't scale to cities. Heavier mechanisms emerged: contracts, courts, banks, regulations.
+
+\textbf{The core problem}: Traditional high-trust solutions required physical proximity and small scale. You could trust your neighbor because you'd see them tomorrow and everyone would know if they cheated you. \emph{The village knew; the internet forgot; we're teaching it to remember.}
+
+\textbf{What Omerta provides}: On-chain records replicate village-level visibility at global scale---everyone can see transaction history, reputation is computable from permanent records, and defection costs accumulated trust. New participants start with nothing and earn trust through behavior, exactly like newcomers to a village.
+
+The key insight: \textbf{network performance is the digital analog of physical proximity}. Well-connected nodes can use lighter trust mechanisms, just as neighbors who see each other daily trust more easily. Currency weight scales with connectivity.
+
+\textbf{The freedom-trust tradeoff}: This visibility comes at a cost. Villages had high trust precisely because they had low freedom---everyone knew your business, you couldn't easily leave, your reputation followed you everywhere. Omerta recreates these properties digitally: transactions are visible, identities are persistent, exit costs are high, and deviation is penalized.
+
+This is not a bug---it is the mechanism by which trust scales. The system explicitly trades freedom for trust. Users who value anonymity, disposable identities, or the ability to ``start fresh'' should use different systems. Users who value counterparty trust, long-term reputation, and cooperation among strangers may find this tradeoff worthwhile.
+
+The honest framing: Omerta is not a privacy technology. It is an anti-privacy technology that trades surveillance for trust. The design should be chosen knowingly, when that tradeoff serves the application's needs.
+
+\textbf{Avoiding village pathologies}: Unlike villages with arbitrary social punishment, gossip, and hidden power structures, Omerta aims to \textbf{maximize freedom within the trust constraint}: only provably harmful actions affect scores, all inputs are visible on-chain, mechanisms are transparent and debatable, and no constraints exist on non-harmful behavior. The goal is \emph{fair} surveillance: comprehensive but explicit, uniform, and challengeable.
+
+\subsubsection{Why Now: Machine Intelligence as Enabler}
+
+Fair trust at scale was computationally intractable---modeling complex behavior, tuning parameters, explaining decisions, and defending against novel attacks required reasoning capacity that didn't exist. Villages could be fair because scope was small; scaling to millions of participants required machine intelligence to handle the complexity.
+
+This explains why trust systems developed in the 2000s (EigenTrust, TidalTrust, FIRE) remained academic exercises. The theory was sound, but practical deployment required handling edge cases, explaining decisions, and adapting to attacks in ways that exceeded human capacity to manage at scale. These systems also lacked economic integration---trust scores that affected nothing had no reason to exist outside research papers.
+
+Machine intelligence enables: behavioral modeling at scale (distinguishing honest mistakes from malice), continuous parameter tuning through simulation, explanation generation for trust decisions, and adversarial reasoning against attacks.
+
+The relationship is recursive: \textbf{machine intelligence both demands the compute that Omerta provides and enables the trust system that makes Omerta work}. Machine intelligence needs distributed compute; distributed compute needs trust mechanisms; trust mechanisms at scale need machine intelligence to operate fairly. This virtuous cycle suggests the timing is not coincidental---the technologies arrive together because each enables the others.
+
+\emph{Machine intelligence is both the demand and the supply: it hungers for compute and enables the trust systems that make sharing compute work.}
+
+\subsection{Philosophy of Law: What Makes a Good Rule?}
+\label{subsec:philosophy-law}
+
+The question of what makes a good law has occupied philosophers for millennia. In 1964, legal philosopher Lon Fuller articulated eight principles that any genuine legal system must satisfy---what he called ``the inner morality of law'' \cite{fuller1969morality}. Fuller's principles represent the minimum conditions for rules to function as law at all:
+
+\begin{enumerate}
+    \item \textbf{Generality}: Laws must be general rules, not ad hoc commands
+    \item \textbf{Promulgation}: Laws must be publicly announced
+    \item \textbf{Prospectivity}: Laws must apply to future conduct, not past
+    \item \textbf{Clarity}: Laws must be understandable
+    \item \textbf{Non-contradiction}: Laws must not contradict each other
+    \item \textbf{Possibility}: Laws must be possible to obey
+    \item \textbf{Constancy}: Laws must be relatively stable over time
+    \item \textbf{Congruence}: Official action must match declared rules
+\end{enumerate}
+
+These seem obvious. Yet in practice, human legal systems fail nearly all of them.
+
+\textbf{The gap between law and practice}: The U.S.\ federal criminal code contains over 4,450 crimes, with estimates of hundreds of thousands more scattered across regulatory provisions. The Code of Federal Regulations spans over 175,000 pages---far more than any citizen could read, let alone understand. Legal scholar William Stuntz observed that overcriminalization has created ``a world in which the law on the books makes everyone a felon, and in which prosecutors and police both define the law on the street'' \cite{stuntz2001pathological}.
+
+This isn't hyperbole. In oral argument before the Supreme Court, a government lawyer explained that a federal statute criminalized any ethical lapse in the workplace. Justice Stephen Breyer responded: ``There are 150 million workers in the United States. I think possibly 140 million of them flunk your test.'' The government lawyer did not deny it.
+
+\textbf{Why laws fail Fuller's principles}: The root cause is human limitation. Legislatures lack the capacity to anticipate all cases, so they write broad rules. Enforcement agencies lack the resources to prosecute everyone, so they exercise discretion. Courts lack the bandwidth to hear every case, so most pleas are negotiated. The result: laws that are unclear (violating \#4), impossible to fully obey (violating \#6), and enforced incongruently with their text (violating \#8).
+
+The failure is not corruption---it's constraint. Humans cannot write rules clear enough to be mechanically applied. Humans cannot monitor compliance at scale. Humans cannot adjudicate consistently across millions of cases. So we accept a system where the written law bears little relation to the enforced law, where everyone is technically guilty, and where actual punishment depends on prosecutorial whim.
+
+This gap between written and enforced law is not merely inefficient---it inverts the rule of law's purpose. Instead of protecting citizens from arbitrary power, the legal system becomes a tool of arbitrary power. When everyone is guilty of something, enforcement becomes selection. And selection invites bias, corruption, and abuse.
+
+\textbf{What machine intelligence enables}: Omerta represents an exploration of what governance might look like without these human limitations. Not a replacement for human law---Omerta governs a narrow domain (compute market transactions)---but a demonstration that Fuller's principles can actually be achieved when machines handle the complexity humans cannot.
+
+Consider how Omerta's rules satisfy Fuller's principles:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Principle} & \textbf{Human Legal System} & \textbf{Omerta} \\
+\midrule
+Generality & General in text, specific in enforcement & Identical rules for all \\
+Promulgation & Buried in thousands of pages & On-chain, machine-readable, open source \\
+Prospectivity & Generally yes & Strictly enforced \\
+Clarity & Ambiguous, requires lawyers & Deterministic code \\
+Non-contradiction & Rampant conflicts & Single consistent ruleset \\
+Possibility & Often impossible to know all rules & Few, explicit, verifiable \\
+Constancy & Constant legislative churn & Trust-weighted consensus for changes \\
+Congruence & Selective enforcement & Automatic, uniform enforcement \\
+\bottomrule
+\end{tabular}
+\caption{Fuller's principles: human law vs.\ Omerta}
+\label{tab:fuller-principles}
+\end{table}
+
+The last principle---congruence---is the most significant. In Omerta, there is no gap between written and enforced law. If the rules say double-spending incurs a 5$\times$ penalty, then every detected double-spend incurs exactly that penalty. No prosecutorial discretion. No selective enforcement. No plea bargains. The rule is the reality.
+
+\textbf{New principles for machine-enforced governance}: Fuller's principles assumed human limitations. With machine intelligence handling complexity, we can articulate stronger principles:
+
+\begin{enumerate}
+    \item \textbf{Determinism}: Given the same facts, the same outcome must result. No room for ``judgment calls.''
+    \item \textbf{Auditability}: Every decision must be traceable to specific facts and rules. No black boxes.
+    \item \textbf{Proportionality}: Penalties must scale with harm. Machines can calculate precisely; they need not round to convenient categories.
+    \item \textbf{Completeness}: Rules must cover all cases. No ``gaps'' requiring human interpretation.
+    \item \textbf{Immediacy}: Enforcement should occur as close to the violation as possible. Delayed justice is weakened justice.
+    \item \textbf{Transparency}: All inputs to decisions must be visible to affected parties. No hidden evidence.
+    \item \textbf{Contestability}: Affected parties must be able to challenge decisions using the same facts and rules.
+\end{enumerate}
+
+Omerta attempts to embody these principles. Trust scores are deterministic---anyone can verify the calculation. Penalties are proportional---severity scales with transaction value and impact. Enforcement is immediate---double-spend detection triggers penalties automatically. All inputs are on-chain---no hidden information.
+
+\textbf{The honest limitation}: These principles work for narrow, well-defined domains like compute market transactions. They cannot replace human judgment for complex social questions---criminal intent, contract interpretation, constitutional rights. Omerta governs a domain where ``harm'' is objectively measurable (did you deliver the compute you promised?). Most of law deals with questions machines cannot yet answer.
+
+But the existence of a domain where Fuller's principles can be fully achieved---where the gap between written and enforced law closes to zero---suggests something important. The failures of human legal systems are not inherent to governance itself. They are artifacts of human limitation. As machine intelligence expands, the domains where principled governance is achievable will expand with it.
+
+\emph{The village didn't need lawyers because everyone knew the rules. We're building a global village where the rules are known because they're code.}
+
+\subsection{Methodological Notes}
+\label{subsec:methodological-notes}
+
+Given this reliance on machine intelligence capabilities, we should be transparent about how this paper itself was developed.
+
+This paper was developed through human-machine collaboration (specifically with Claude), demonstrating the thesis that machine intelligence enables previously intractable system design. Economic models, attack analyses, and simulations were developed iteratively---machine intelligence provided rapid prototyping and edge case identification; humans provided direction, validation, and judgment.
+
+\textbf{Methodology}: The simulation approach draws on agent-based computational economics \cite{tesfatsion2006handbook,farmer2009economy,arthur1999complexity,nisan2007algorithmic,windrum2007validation}, following established validation practices: parameter sweeps, sensitivity analysis, and comparison against theoretical predictions. Market mechanisms build on auction theory \cite{klemperer1999auction} and matching markets \cite{roth1982matching}; trust propagation relates to reputation network effects \cite{dellarocas2005reputation,williamson1998transaction}.
+
+\textbf{Tradeoffs}: Machine-intelligence-assisted analysis enables rapid parameter exploration, consistent reasoning across long documents, and systematic attack enumeration. Risks include hallucination, training data limitations, and sycophancy bias. We mitigate these through executable simulations (claims grounded in verifiable outputs), human review, and adversarial prompting.
+
+\textbf{The honest position}: This paper represents our best current understanding. We expect some aspects to be wrong and invite scrutiny. By making our process transparent---including machine intelligence involvement---we trade authorial mystique for verifiability.
+
+\subsection{Limitations}
+\label{subsec:limitations}
+
+In that spirit of honesty, we must acknowledge what Omerta does not solve and where the design may be incomplete.
+
+\textbf{Bootstrap Problem}: The network requires initial trusted participants to establish the trust graph. Genesis block contents define starting conditions.
+
+\textbf{Sophisticated Attackers}: Well-resourced attackers willing to invest years in building reputation before striking remain a threat. No system fully prevents long-con attacks.
+
+\textbf{Parameter Sensitivity}: Optimal parameter values require empirical tuning and may vary across network conditions.
+
+\textbf{Trust Propagation Threshold}: Research on trust transitivity \cite{richters2011trust} shows that in large networks, trust propagation requires a non-zero fraction of ``absolute trust'' edges (complete confidence) or average pairwise trust collapses to zero. Omerta uses continuous trust values with decay. Whether this satisfies the threshold for robust propagation at scale requires further analysis; finite networks may be more resilient than the theoretical bound suggests.
+
+\textbf{Verification Overhead}: Random audits impose costs on honest participants. The verification rate must balance security against efficiency.
+
+\textbf{Machine-Intelligence-Assisted Design Uncertainty}: As discussed in Section~\ref{subsec:methodological-notes}, machine-intelligence-assisted analysis carries risks of hallucination and training data limitations. While we have attempted to mitigate these through executable simulations and adversarial review, some errors may remain undetected.
+
+\textbf{Fundamental Sybil Limits}: Douceur \cite{douceur2002sybil} proved that Sybil attacks are fundamentally unsolvable without trusted identity verification. Omerta's defenses (age, cluster detection, economic penalties) make Sybil attacks expensive but not impossible. A patient, well-resourced adversary who pre-creates identities years in advance can eventually attack with mature identities. We mitigate this through continuous behavioral monitoring, but acknowledge the theoretical limitation.
+
+\textbf{Existing Compute Market Struggles}: Decentralized compute platforms built on blockchain (Golem \cite{golem2016}, iExec \cite{iexec2017}, Render Network) have operated for years but struggled with utilization and adoption. This suggests challenges beyond trust mechanisms---possibly network effects, user experience, or fundamental market structure issues. Omerta may face similar challenges regardless of its trust system design. We cannot assume that better trust mechanisms alone will solve adoption problems.
+
+Despite these limitations, we believe there are reasons for cautious optimism.
+
+\textbf{Why Omerta Might Succeed Where Others Struggled}: While acknowledging the above challenges, several factors differentiate Omerta's approach:
+
+\begin{enumerate}
+    \item \emph{Zero marginal cost for providers}: Home computers sit idle most of the time---evenings, weekends, workdays. The marginal cost of running Omerta is effectively zero: electricity that would be consumed anyway, hardware already purchased, internet already paid for. Unlike mining which consumes significant additional power, providing idle compute requires only installing free software. The barrier to entry is a download, not an investment.
+
+    \item \emph{Integration with existing infrastructure}: Omerta is designed to work with standard virtualization (KVM, Docker) and existing network configurations. Providers don't need specialized hardware, dedicated IP addresses, or complex configuration. The system handles NAT traversal, resource detection, and verification automatically. If you can run a VM, you can be a provider.
+
+    \item \emph{Consumer-side simplicity}: Consumers see simple pricing (``8 cores = 0.09 OMC/hr'') without needing to understand trust mechanisms, blockchain, or market dynamics. The complexity is hidden. Integration targets existing workflows---SSH access, standard tooling, familiar interfaces.
+
+    \item \emph{Machine intelligence as the customer}: Prior decentralized compute markets targeted human developers who are price-sensitive, quality-demanding, and have alternatives. Omerta targets machine intelligence workloads that are: (a) less sensitive to latency variance, (b) naturally parallelizable, (c) fault-tolerant by design, and (d) generated in unbounded quantity. Machine intelligences don't complain about occasional failures---they retry automatically.
+
+    \item \emph{Open source with no platform fees}: The Omerta software is free. There is no company extracting rent, no token appreciation to fund, no investors requiring returns. Providers keep what they earn (minus trust-based burns that fund the network). This removes the economic friction that plagued VC-funded alternatives.
+
+    \item \emph{No preallocation, no founder stake}: Unlike many cryptocurrency projects that reserve tokens for founders, early investors, or development funds, Omerta's coin distribution is entirely trust-based from genesis. The code is given away. There is no hidden stake waiting to dump on participants. Less greed, more alignment---everyone earns their position through contribution.
+
+    \item \emph{Economic integration the academy lacked}: Prior trust systems (EigenTrust, TidalTrust, FIRE) were purely academic---they computed trust scores that connected to nothing. Omerta integrates trust directly with economic mechanisms: payment splits, transfer burns, coin distribution. Trust has consequences. This gives the system a reason to exist beyond academic citation.
+\end{enumerate}
+
+These factors don't guarantee success, but they address specific failure modes observed in prior systems: high barriers to entry, poor user experience, mismatched customer base, extractive platform economics, and lack of economic integration. Prior trust research gave us the theory. Prior blockchain projects showed us the pitfalls. Omerta attempts to learn from both.
+
+\textbf{Machine Intelligence Demand Thesis is Speculative}: Our argument that machine intelligence creates unbounded compute demand (Section~\ref{subsec:mi-demand-thesis}) is forward-looking and unproven. Current machine intelligence demand is large but not literally unbounded. The thesis depends on assumptions about machine intelligence capability trajectories that may not hold. If machine intelligence development stalls or compute efficiency improves faster than demand grows, the perpetual undersupply assumption fails, and with it the economic model for home provider value creation.
+
+\textbf{Detection vs.\ Prevention}: As clarified in Section~\ref{subsec:double-spend-resolution}, Omerta detects double-spends but does not prevent them. The system relies on economic penalties making attacks unprofitable, not on making attacks impossible. This is a weaker guarantee than blockchain consensus provides. For applications requiring absolute prevention of double-spending, blockchain remains more appropriate.

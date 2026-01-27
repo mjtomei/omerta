@@ -1,0 +1,30 @@
+% Section 9: Conclusion
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Trustlessness exists on a spectrum. Proof-of-work and proof-of-stake mechanisms genuinely reduce trust requirements compared to centralized alternatives---this is a real achievement. But they do so at significant cost, and historical episodes demonstrate that no practical system reaches the zero-trust endpoint.
+
+Omerta explores a different point on this spectrum. Rather than paying for global consensus that compute markets may not need, Omerta computes trust locally based on verifiable on-chain data. The hypothesis is that for bilateral compute transactions---where sessions are ephemeral, verification is possible during execution, and reputation has natural meaning---local trust provides sufficient security at dramatically lower cost.
+
+This parallels the choice between fully homomorphic encryption and ephemeral compute. FHE provides the ultimate guarantee but at 1000x+ overhead, restricting practical use. Ephemeral compute accepts some trust requirements in exchange for serving far more use cases. Similarly, blockchain consensus provides strong guarantees but at costs (energy, capital, throughput) that may exceed what compute markets require.
+
+Our simulation studies validate several key claims. Automated policy mechanisms respond appropriately to detected threats, though parameter adjustment alone cannot counter structural attacks---effective systems need architectural defenses complemented by policy fine-tuning. Double-spend resolution simulations confirm that currency ``weight'' scales with network performance: well-connected networks achieve 100\% detection with sub-200ms finality, while poorly-connected networks require heavier mechanisms. The system degrades gracefully across this spectrum.
+
+Our economic simulations demonstrate that unreliable home compute creates genuine value---not merely redistributes it---when demand exceeds datacenter capacity. In undersupplied markets, home providers serve consumers that datacenters cannot reach, increasing total compute delivered by 200\% while datacenter profits remain largely intact. The viability of this model depends on perpetual undersupply.
+
+We argue that machine intelligence guarantees this undersupply. Unlike human demand, which is bounded and tends toward equilibrium, machine intelligence creates unbounded demand for compute at any quality level. There is always a next-best task---a machine that cannot profitably do a \$50/hr task can still generate value doing a \$5/hr task. As machine intelligences improve, this demand curve extends to arbitrarily low prices, ensuring that any compute capacity finds productive use.
+
+But machine intelligence plays a deeper role than just creating demand. Fair trust systems at scale---systems that penalize only provable misbehavior through transparent, debatable mechanisms---were computationally intractable until now. Modeling human behavior, detecting novel attacks, explaining decisions, and tuning parameters requires enormous reasoning capacity. Machine intelligence provides this capacity for the first time. The relationship is recursive: machine intelligence demands the compute that Omerta provides, and machine intelligence enables the trust system that makes Omerta work. This virtuous cycle suggests the technologies arrive together because each enables the others.
+
+This framing illuminates what Omerta attempts: extending village-level trust to global scale. Villages had high trust because they had high visibility---everyone knew everyone's business, reputation spread by gossip, misbehavior had lasting consequences. Omerta recreates these properties digitally through on-chain transparency. But unlike villages with their arbitrary social punishment, Omerta aims to maximize freedom within the trust constraint. Only provably anti-social behavior affects trust scores. All mechanisms are documented and debatable. Participants retain freedom for any behavior that doesn't demonstrably harm others.
+
+The goal is not to replace blockchain systems---they serve real purposes and represent genuine advances. The goal is to expand the design space, recognizing that different applications may have different optimal points on the trust-cost spectrum. For compute markets specifically---especially those serving machine intelligence workloads---we believe there is an underexplored region that could make trustworthy compute sharing accessible to more people at practical cost.
+
+Omerta is an experiment in finding that region. The question is not whether unreliable compute will displace datacenters, but whether we can deploy enough compute of any quality to satisfy the exponentially growing demand of machine intelligence---and whether machine intelligence can, in turn, help us build the fair trust systems needed to make that deployment work.
+
+The pieces are falling into place. Billions of computers sit idle, their owners having already paid for hardware, electricity, and internet---zero marginal cost waiting to be unlocked. Machine intelligence creates unbounded demand for exactly the kind of fault-tolerant, parallelizable workloads that unreliable compute can serve. And for the first time, machine intelligence provides the reasoning capacity to build fair trust systems at scale. Omerta is open source, free to use, with no platform extracting rent. The barrier to participation is a download.
+
+Prior trust systems remained academic exercises---elegant theory with no economic consequences and no killer application. Prior decentralized compute markets struggled because they targeted the wrong customers with the wrong economics at the wrong time. Omerta learns from both: it takes the trust theory seriously, integrates it with real economics, gives the software away for free with no preallocation, and targets the one customer that can consume infinite compute---machine intelligence itself.
+
+\emph{We don't need zero trust. We need enough trust---earned, local, and proportional to what's at stake.}

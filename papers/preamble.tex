@@ -1,0 +1,61 @@
+% Shared preamble for Omerta papers
+% Include with: \input{preamble}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{float}
+
+\geometry{margin=1in}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{property}{Property}
+
+% Code listing style for OMT DSL
+\lstdefinelanguage{omt}{
+  keywords={transaction, imports, parameters, enum, block, message, actor, function, native, store, trigger, state, by, from, to, signed, in, on, when, auto, else, timeout, initial, terminal},
+  keywordstyle=\color{blue}\bfseries,
+  keywords=[2]{HASH, SIGN, VERIFY_SIG, SEND, BROADCAST, STORE, APPEND, LOAD, NOW, READ, FILTER, MAP, GET, CONTAINS, LENGTH, IF, THEN, ELSE, AND, OR, NOT, RETURN},
+  keywordstyle=[2]\color{purple},
+  keywords=[3]{hash, uint, int, float, peer_id, timestamp, bytes, string, bool, list, map, dict, any},
+  keywordstyle=[3]\color{teal},
+  comment=[l]{\#},
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{red},
+  morestring=[b]",
+  sensitive=true,
+}
+
+\lstset{
+  language=omt,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  tabsize=4,
+  showstringspaces=false,
+}
+
+% Hyperref setup
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue
+}

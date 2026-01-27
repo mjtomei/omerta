@@ -1,0 +1,361 @@
+% Appendix: OMT Transaction DSL Specification
+
+\section{OMT Transaction DSL Specification}
+\label{sec:appendix-omt-dsl}
+
+The Omerta Transaction DSL (OMT) is a domain-specific language for formally specifying distributed transaction protocols as communicating state machines. This appendix provides the complete language specification.
+
+\subsection{Lexical Structure}
+
+\subsubsection{Comments}
+
+Single-line comments begin with \texttt{\#} and extend to end of line:
+
+\begin{lstlisting}
+# This is a comment
+\end{lstlisting}
+
+\subsubsection{Identifiers}
+
+Identifiers consist of letters, digits, and underscores, starting with a letter:
+
+\begin{itemize}
+    \item \texttt{UPPER\_CASE}: Constants, enum values, built-in functions
+    \item \texttt{CamelCase}: Type names, actor names, message names
+    \item \texttt{lower\_case}: Variables, fields, parameters
+\end{itemize}
+
+\subsubsection{Keywords}
+
+Reserved keywords:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\texttt{transaction} & \texttt{imports} & \texttt{parameters} & \texttt{enum} \\
+\texttt{block} & \texttt{message} & \texttt{actor} & \texttt{function} \\
+\texttt{store} & \texttt{trigger} & \texttt{state} & \texttt{native} \\
+\texttt{by} & \texttt{from} & \texttt{to} & \texttt{signed} \\
+\texttt{in} & \texttt{on} & \texttt{when} & \texttt{auto} \\
+\texttt{else} & \texttt{timeout} & \texttt{initial} & \texttt{terminal} \\
+\bottomrule
+\end{tabular}
+\caption{OMT reserved keywords}
+\label{tab:omt-keywords}
+\end{table}
+
+\subsubsection{Literals}
+
+\begin{itemize}
+    \item \textbf{Integer}: \texttt{42}, \texttt{1000}
+    \item \textbf{Float}: \texttt{3.14}, \texttt{0.67}
+    \item \textbf{String}: \texttt{"quoted text"}
+    \item \textbf{Boolean}: \texttt{true}, \texttt{false}
+    \item \textbf{Null}: \texttt{null}
+\end{itemize}
+
+\subsection{Type System}
+
+\subsubsection{Primitive Types}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Type} & \textbf{Description} \\
+\midrule
+\texttt{uint} & Unsigned integer \\
+\texttt{int} & Signed integer \\
+\texttt{float} & Floating-point number \\
+\texttt{bool} & Boolean \\
+\texttt{string} & UTF-8 string \\
+\texttt{bytes} & Byte array \\
+\texttt{hash} & 256-bit hash value \\
+\texttt{peer\_id} & Peer identifier (hash of public key) \\
+\texttt{timestamp} & Unix timestamp \\
+\texttt{any} & Dynamic type \\
+\texttt{dict} & Key-value mapping \\
+\bottomrule
+\end{tabular}
+\caption{OMT primitive types}
+\label{tab:omt-types}
+\end{table}
+
+\subsubsection{Compound Types}
+
+\begin{itemize}
+    \item \textbf{List}: \texttt{list<peer\_id>}, \texttt{list<uint>}
+    \item \textbf{Map}: \texttt{map<string, uint>}, \texttt{map<peer\_id, float>}
+\end{itemize}
+
+\subsection{Top-Level Declarations}
+
+\subsubsection{Transaction Declaration}
+
+\begin{lstlisting}
+transaction <id> "<name>" "<description>"
+\end{lstlisting}
+
+Example:
+\begin{lstlisting}
+transaction 00 "Escrow Lock" "Lock funds for compute session"
+\end{lstlisting}
+
+\subsubsection{Import Declaration}
+
+\begin{lstlisting}
+imports <path>
+\end{lstlisting}
+
+Imports definitions from another OMT file.
+
+\subsubsection{Parameters Block}
+
+\begin{lstlisting}
+parameters (
+    <NAME> = <value> <unit>? "<description>"
+    ...
+)
+\end{lstlisting}
+
+Units: \texttt{seconds}, \texttt{count}, \texttt{fraction}
+
+Example:
+\begin{lstlisting}
+parameters (
+    WITNESS_COUNT = 5 count "Number of witnesses"
+    TIMEOUT = 300 seconds "Session timeout"
+    THRESHOLD = 0.67 fraction "Consensus threshold"
+)
+\end{lstlisting}
+
+\subsubsection{Enum Declaration}
+
+\begin{lstlisting}
+enum <Name> "<description>" (
+    VALUE1
+    VALUE2
+    ...
+)
+\end{lstlisting}
+
+\subsubsection{Block Declaration}
+
+Blocks represent on-chain records:
+
+\begin{lstlisting}
+block <NAME> by [<Actor1>, <Actor2>] (
+    <field_name>    <type>
+    ...
+)
+\end{lstlisting}
+
+\subsubsection{Message Declaration}
+
+Messages are signed communications between actors:
+
+\begin{lstlisting}
+message <NAME> from <Actor> to [<Recipient>, ...] signed? (
+    <field_name>    <type>
+    ...
+)
+\end{lstlisting}
+
+\subsubsection{Function Declaration}
+
+\begin{lstlisting}
+function <NAME>(<param> <type>, ...) -> <return_type> (
+    <statements>
+)
+\end{lstlisting}
+
+\subsection{Actor Declaration}
+
+Actors are state machines that process messages:
+
+\begin{lstlisting}
+actor <Name> "<description>" (
+    store (
+        <field_name>    <type>
+        ...
+    )
+
+    trigger <name>(<params>) in [<STATE1>, ...] "<description>"
+
+    state <NAME> initial? terminal? "<description>"
+
+    <transitions>
+)
+\end{lstlisting}
+
+\subsubsection{Transitions}
+
+\begin{lstlisting}
+<FROM_STATE> -> <TO_STATE> on <trigger> when <guard>? (
+    <actions>
+) else -> <ALT_STATE> (
+    <actions>
+)
+\end{lstlisting}
+
+Trigger types:
+\begin{itemize}
+    \item \texttt{on <MESSAGE\_NAME>}: Triggered by receiving a message
+    \item \texttt{on <trigger\_name>}: Triggered by external trigger
+    \item \texttt{on timeout(<PARAM>)}: Triggered after timeout
+    \item \texttt{auto}: Automatic transition (no trigger)
+\end{itemize}
+
+\subsection{Actions}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Action} & \textbf{Syntax} & \textbf{Description} \\
+\midrule
+Store fields & \texttt{store field1, field2} & Store from message \\
+Store computed & \texttt{STORE(name, expr)} & Store computed value \\
+Compute & \texttt{name = expr} & Compute and store \\
+Send & \texttt{SEND(target, MESSAGE)} & Send message to peer \\
+Broadcast & \texttt{BROADCAST(list, MESSAGE)} & Send to multiple peers \\
+Append & \texttt{APPEND(chain, BLOCK)} & Append block to chain \\
+Append list & \texttt{APPEND(list, value)} & Append to list \\
+\bottomrule
+\end{tabular}
+\caption{OMT actions}
+\label{tab:omt-actions}
+\end{table}
+
+\subsection{Expressions}
+
+\subsubsection{Operators}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Category} & \textbf{Operators} \\
+\midrule
+Arithmetic & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
+Comparison & \texttt{==}, \texttt{!=}, \texttt{<}, \texttt{>}, \texttt{<=}, \texttt{>=} \\
+Logical & \texttt{AND}, \texttt{OR}, \texttt{NOT} \\
+Access & \texttt{.} (field), \texttt{[]} (index) \\
+\bottomrule
+\end{tabular}
+\caption{OMT operators}
+\label{tab:omt-operators}
+\end{table}
+
+\subsubsection{Conditional}
+
+\begin{lstlisting}
+IF <condition> THEN <expr> ELSE <expr>
+\end{lstlisting}
+
+\subsubsection{Lambda}
+
+\begin{lstlisting}
+param => expr
+\end{lstlisting}
+
+Used with \texttt{FILTER} and \texttt{MAP}.
+
+\subsection{Built-in Functions}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Function} & \textbf{Signature} & \textbf{Description} \\
+\midrule
+\texttt{HASH} & \texttt{(any, ...) -> hash} & Cryptographic hash \\
+\texttt{SIGN} & \texttt{(hash) -> bytes} & Sign with actor's key \\
+\texttt{VERIFY\_SIG} & \texttt{(bytes, peer\_id) -> bool} & Verify signature \\
+\texttt{NOW} & \texttt{() -> timestamp} & Current time \\
+\texttt{LENGTH} & \texttt{(list<T>) -> uint} & List length \\
+\texttt{FILTER} & \texttt{(list<T>, T -> bool) -> list<T>} & Filter list \\
+\texttt{MAP} & \texttt{(list<T>, T -> U) -> list<U>} & Transform list \\
+\texttt{GET} & \texttt{(map<K,V>, K, V?) -> V} & Map lookup with default \\
+\texttt{CONTAINS} & \texttt{(list<T>, T) -> bool} & List membership \\
+\texttt{LOAD} & \texttt{(identifier) -> any} & Load from store \\
+\texttt{RETURN} & \texttt{(expr)} & Return from function \\
+\bottomrule
+\end{tabular}
+\caption{OMT built-in functions}
+\label{tab:omt-functions}
+\end{table}
+
+\subsection{Semantic Constraints}
+
+\begin{enumerate}
+    \item Each actor must have exactly one \texttt{initial} state
+    \item Each actor should have at least one \texttt{terminal} state
+    \item All states must be reachable from the initial state
+    \item All referenced types, messages, and states must be defined
+    \item Triggers can only fire in their declared \texttt{in} states
+    \item The \texttt{message} keyword refers to the received message in transitions
+    \item The \texttt{peer\_id} keyword refers to the actor's own identity
+\end{enumerate}
+
+\subsection{Example: Simplified Escrow Lock}
+
+\begin{lstlisting}
+transaction 00 "Escrow Lock" "Lock funds for compute session"
+
+parameters (
+    WITNESS_COUNT = 5 count "Number of witnesses"
+    LOCK_TIMEOUT = 300 seconds "Time to complete lock"
+)
+
+enum LockStatus (
+    ACCEPTED
+    REJECTED
+)
+
+block BALANCE_LOCK by [Consumer, Witness] (
+    session_id       hash
+    amount           uint
+    timestamp        timestamp
+)
+
+message LOCK_INTENT from Consumer to [Provider] signed (
+    session_id       hash
+    amount           uint
+)
+
+message LOCK_RESULT from Witness to [Consumer] signed (
+    session_id       hash
+    status           LockStatus
+)
+
+actor Consumer "Party paying for service" (
+    store (
+        session_id       hash
+        amount           uint
+    )
+
+    trigger initiate_lock(provider peer_id, amount uint) in [IDLE]
+
+    state IDLE initial "Waiting to initiate"
+    state WAITING "Waiting for result"
+    state LOCKED terminal "Funds locked"
+    state FAILED terminal "Lock failed"
+
+    IDLE -> WAITING on initiate_lock when amount > 0 (
+        session_id = HASH(peer_id, provider, NOW())
+        store amount
+        SEND(provider, LOCK_INTENT)
+    )
+
+    WAITING -> LOCKED on LOCK_RESULT when message.status == LockStatus.ACCEPTED (
+        APPEND(chain, BALANCE_LOCK)
+    )
+
+    WAITING -> FAILED on LOCK_RESULT when message.status == LockStatus.REJECTED ()
+
+    WAITING -> FAILED on timeout(LOCK_TIMEOUT) ()
+)
+\end{lstlisting}

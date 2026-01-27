@@ -1,0 +1,93 @@
+% Section 5: Economic Mechanisms
+
+\section{Economic Mechanisms}
+\label{sec:economic-mechanisms}
+
+Prior trust systems---EigenTrust, TidalTrust, FIRE, PowerTrust---computed reputation scores that had no direct consequences. A user with high trust and a user with low trust experienced the same platform. This may explain why these systems remained academic: reputation without economic consequence is reputation without purpose.
+
+Omerta integrates trust directly into economic flows. Trust affects what you earn, what you can transfer, and what you receive from daily distribution. This gives trust a reason to exist and gives participants a reason to care about it.
+
+\subsection{Payment Splits}
+\label{subsec:payment-splits}
+
+Consumer payments split between provider and cryptographic burn based on provider trust:
+
+\begin{equation}
+\text{provider\_share} = 1 - \frac{1}{1 + K_{\text{PAYMENT}} \times T}
+\end{equation}
+
+As trust increases, provider share approaches 100\% asymptotically but never reaches it. New providers with low trust see most of their payment burned; established providers keep most of it.
+
+\subsubsection{Payment Split by Trust Level}
+
+The following table shows provider share for different trust scores and $K_{\text{PAYMENT}}$ values:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+\textbf{Trust Score} & \textbf{K=1.0} & \textbf{K=2.0} & \textbf{K=5.0} & \textbf{K=10.0} \\
+\midrule
+0.0 (new) & 0\% & 0\% & 0\% & 0\% \\
+0.1 & 9\% & 17\% & 33\% & 50\% \\
+0.2 & 17\% & 29\% & 50\% & 67\% \\
+0.5 & 33\% & 50\% & 71\% & 83\% \\
+1.0 & 50\% & 67\% & 83\% & 91\% \\
+2.0 & 67\% & 80\% & 91\% & 95\% \\
+5.0 & 83\% & 91\% & 96\% & 98\% \\
+10.0 & 91\% & 95\% & 98\% & 99\% \\
+\bottomrule
+\end{tabular}
+\caption{Provider share by trust score and $K_{\text{PAYMENT}}$ parameter}
+\label{tab:payment-split}
+\end{table}
+
+\textbf{Reading the table}: With $K_{\text{PAYMENT}}=5.0$, a provider with trust score 0.5 keeps 71\% of payments; the remaining 29\% is burned. A highly trusted provider (score 5.0) keeps 96\%.
+
+\textbf{Design insight}: Higher $K$ values reward trust more steeply. $K=5.0$ means a provider must reach trust $\sim$1.0 to keep most of their earnings, creating strong incentive for sustained good behavior.
+
+This creates natural incentives: build trust to keep more of your earnings. No external enforcement needed---the economics handle it.
+
+\subsection{Transfer Burns}
+\label{subsec:transfer-burns}
+
+Transfers between identities are taxed based on the minimum trust of sender and receiver:
+
+\begin{equation}
+\text{transfer\_burn\_rate} = \frac{1}{1 + K_{\text{TRANSFER}} \times \min(T_{\text{sender}}, T_{\text{receiver}})}
+\end{equation}
+
+Low-trust identities cannot easily transfer coins. This prevents reputation laundering (build trust, exploit, transfer coins to fresh identity) and creates strong incentive to donate compute rather than buy coins.
+
+\subsection{Daily Distribution}
+\label{subsec:daily-distribution}
+
+New coins are minted daily and distributed proportionally to trust scores:
+
+\begin{equation}
+\text{daily\_share}(i) = \frac{\text{effective\_trust}(i)}{\sum_j \text{effective\_trust}(j)} \times \text{DAILY\_MINT}
+\end{equation}
+
+This creates the core incentive: misbehave and your trust drops, reducing tomorrow's share. The motivation to be honest is simply: keep getting your handout.
+
+\subsection{Donation and Negative Bids}
+\label{subsec:donation-negative-bids}
+
+Providers can accept negative-price bids from research organizations, burning their own coins for accelerated trust:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Bid Type} & \textbf{Price} & \textbf{Trust Multiplier} \\
+\midrule
+Commercial & Positive & 1x \\
+Zero donation & Zero & 1x \\
+Negative donation & Negative & Up to 4x \\
+\bottomrule
+\end{tabular}
+\caption{Trust multipliers by bid type}
+\label{tab:bid-types}
+\end{table}
+
+This enables bootstrapping: new providers can burn coins to accelerate trust building while providing verified compute to research projects. Trust cannot be purchased without actual work---the burn is additional, not replacement.

@@ -1,0 +1,137 @@
+% Section 6: Attack Analysis and Defenses
+
+\section{Attack Analysis and Defenses}
+\label{sec:attack-analysis}
+
+The trust and economic mechanisms described above create a system with specific attack surfaces. This section analyzes the major attack vectors and Omerta's defenses against them. We aim for honest assessment: some attacks are prevented, others are merely made expensive, and some remain as acknowledged limitations.
+
+\subsection{Sybil Attacks}
+\label{subsec:sybil-attacks}
+
+\textbf{Attack}: Create many fake identities to manipulate trust or distribution.
+
+\textbf{Defenses}:
+\begin{itemize}
+    \item \textbf{Age derate}: New identities earn nothing initially
+    \item \textbf{Cluster detection}: Tightly-connected subgraphs with few external edges are flagged
+    \item \textbf{Behavioral similarity}: Identities behaving too similarly are downweighted
+    \item \textbf{Activity requirements}: Must maintain ongoing participation
+\end{itemize}
+
+\subsection{Collusion and Trust Inflation}
+\label{subsec:collusion}
+
+\textbf{Attack}: Colluding parties mutually vouch for each other to inflate trust.
+
+\textbf{Defenses}:
+\begin{itemize}
+    \item \textbf{Graph analysis}: Detect circular trust flows and isolated cliques
+    \item \textbf{Verification requirements}: Trust requires verified compute, not just assertions
+    \item \textbf{Statistical anomaly detection}: Burst activity, coordinated timing flagged
+\end{itemize}
+
+\subsection{Trust Arbitrage}
+\label{subsec:trust-arbitrage}
+
+\textbf{Attack}: Build trust in Community A, exploit in Community B.
+
+\textbf{Defense}: Local trust computation means trust doesn't transfer across network distance. Attackers must build trust directly with each target community.
+
+\subsection{Multi-Identity Exploitation}
+\label{subsec:multi-identity}
+
+\textbf{Attack}: Maintain multiple identities to hedge risk or enable sacrificial attacks.
+
+\textbf{Critical Distinction}: Some multi-identity strategies must be absolutely prevented; others may be tolerated.
+
+\textbf{Absolute Protections}:
+\begin{itemize}
+    \item UBI distribution: Malicious behavior in any linked identity reduces combined distribution
+    \item Trust from activity: Same work split across N identities yields at most single-identity trust
+    \item Accusation credibility: N low-credibility accusations don't sum to high credibility
+\end{itemize}
+
+\textbf{Tolerated Advantages}:
+\begin{itemize}
+    \item Risk diversification: Legitimate businesses may operate multiple identities
+    \item Community separation: Operating in isolated communities without cross-contamination
+    \item Recovery via new identity: Starting fresh with appropriate penalties
+\end{itemize}
+
+\subsection{Identity-Bound Access}
+\label{subsec:identity-bound}
+
+\textbf{Problem}: Traditional credential theft enables exploiting stolen identity's reputation.
+
+\textbf{Solution}: VM access is bound to the consumer's on-chain private key. No key, no access. \emph{If you have the key, you ARE the identity---there is no ``stealing,'' only ``being.''}
+
+\subsection{Double-Spend Attacks}
+\label{subsec:double-spend}
+
+\textbf{Problem}: Unlike blockchain where global consensus mathematically prevents spending the same currency twice, Omerta's local trust model allows an attacker to sign conflicting transactions and broadcast them to different parts of the network before detection.
+
+\textbf{Why blockchain prevents it}: Proof-of-work and proof-of-stake achieve global consensus on transaction ordering. Once a transaction is confirmed, the entire network agrees it happened, making conflicting transactions impossible to confirm.
+
+\textbf{Why Omerta can only detect it}: We deliberately avoid global consensus (and its costs). Without a single authoritative ordering, conflicting transactions can temporarily coexist until nodes compare notes.
+
+\textbf{Our defenses}:
+
+\begin{enumerate}
+    \item \textbf{Detection via gossip}: Nodes share transaction records. When a node receives conflicting transactions from the same sender, the double-spend is detected. Well-connected networks detect nearly all double-spends; poorly-connected networks have detection gaps.
+
+    \item \textbf{Economic penalties}: Detected double-spends trigger a 5$\times$ penalty on the attacker's stake. At 100\% detection, expected ROI is $-400\%$. Even at 50\% detection, ROI remains negative ($-150\%$).
+
+    \item \textbf{Currency weight scaling}: Trust-weighted currency treats high-trust and low-trust coins differently. Transactions from low-trust identities require more confirmations or smaller amounts, limiting exposure.
+
+    \item \textbf{Reputation destruction}: Beyond the immediate penalty, detected double-spenders lose their accumulated trust, making future participation difficult.
+\end{enumerate}
+
+\textbf{Limitation}: This is detection, not prevention. For high-value transactions requiring absolute double-spend prevention, blockchain remains more appropriate. Omerta accepts this tradeoff for lower-value, high-frequency compute transactions where the economics of detection are sufficient.
+
+See Section~\ref{sec:simulation-results} for simulation results validating detection rates and economic stability under various network conditions.
+
+\subsection{Attack Economics Summary}
+\label{subsec:attack-economics}
+
+The following table summarizes the economic calculus for major attack types:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{Attack} & \textbf{Setup Cost} & \textbf{Time} & \textbf{Expected Gain} & \textbf{Expected Loss} & \textbf{ROI} \\
+\midrule
+Sybil (1000 ids) & Low & 1--2 years & Distribution share & Detection $\rightarrow$ isolation & Negative \\
+Trust inflation & Medium & 6+ months & Inflated share & Graph analysis $\rightarrow$ derate & Negative \\
+Double-spend & High & Immediate & 1$\times$ value & 5$\times$ penalty + trust loss & $-400\%$ \\
+Long-con & Low & 2--5 years & Single exploit & Total reputation loss & Possibly positive \\
+Provider fraud & Low & Immediate & Payment & Verification $\rightarrow$ penalties & Negative \\
+Eclipse attack & High & Weeks & Partition exploit & Recovery + detection & Context-dependent \\
+\bottomrule
+\end{tabular}
+\caption{Attack economics summary}
+\label{tab:attack-economics}
+\end{table}
+
+\textbf{Key insight}: Most attacks have negative expected ROI \emph{after detection}. The exception is the long-con attack where patient adversaries build genuine reputation over years before a single large exploit. This remains an acknowledged limitation---we make long-con attacks expensive in time, but not impossible.
+
+\textbf{Detection probability matters}: Double-spend ROI at different detection rates:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Detection Rate} & \textbf{Expected Value} & \textbf{ROI} \\
+\midrule
+100\% & $-4\times$ stake & $-400\%$ \\
+80\% & $-3\times$ stake & $-300\%$ \\
+50\% & $-1.5\times$ stake & $-150\%$ \\
+20\% & $+0.2\times$ stake & $+20\%$ \\
+\bottomrule
+\end{tabular}
+\caption{Double-spend ROI by detection rate}
+\label{tab:double-spend-roi}
+\end{table}
+
+The 5$\times$ penalty ensures attacks are unprofitable even at 50\% detection. Below $\sim$25\% detection, attacks become profitable---motivating investment in detection infrastructure.

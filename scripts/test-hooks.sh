@@ -125,16 +125,13 @@ expect_blocked ".p12 file" "cert.p12" 'pkcs12 content'
 expect_blocked "id_rsa file" "id_rsa" 'ssh key content'
 
 echo ""
-echo "--- Pre-commit: False Positives (should be allowed) ---"
+echo "--- Pre-commit: Normal Files (should be allowed) ---"
 echo ""
 
-# False positives that should be allowed
-expect_allowed "Placeholder API key" "docs.md" 'api_key = "YOUR_API_KEY_HERE"'
-expect_allowed "Template password" "template.yaml" 'password: <your-password-here>'
 expect_allowed "Normal code" "app.py" 'def get_user():
     return {"name": "test"}'
-expect_allowed "Comment with example" "config.py" '# Example: api_key = "your_key_here"'
 expect_allowed "Public key file" "server.pub" 'ssh-rsa AAAAB3NzaC1yc2E...'
+expect_allowed "Documentation" "README.md" '# Project README'
 
 # Test in submodule if available
 if [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then

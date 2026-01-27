@@ -83,7 +83,7 @@ jobs:
       - name: Run tests
         run: |
           python3 -m venv .venv
-          source .venv/bin/activate
+          . .venv/bin/activate
           pip install --upgrade pip
           pip install -e omerta_lang
           pip install -r omerta_protocol/requirements.txt

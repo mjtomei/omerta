@@ -19,9 +19,15 @@ PASSED=0
 FAILED=0
 
 setup_hooks() {
+    # Configure git user for CI (needed for test commits)
+    git config user.email "test@example.com" 2>/dev/null || true
+    git config user.name "Test User" 2>/dev/null || true
+
     for dir in "$ROOT_DIR" "$ROOT_DIR"/omerta_lang "$ROOT_DIR"/omerta_mesh "$ROOT_DIR"/omerta_node "$ROOT_DIR"/omerta_protocol; do
         if [ -d "$dir/.githooks" ]; then
             (cd "$dir" && git config core.hooksPath .githooks 2>/dev/null || true)
+            (cd "$dir" && git config user.email "test@example.com" 2>/dev/null || true)
+            (cd "$dir" && git config user.name "Test User" 2>/dev/null || true)
         fi
     done
 }

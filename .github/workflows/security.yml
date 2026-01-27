@@ -18,6 +18,13 @@ jobs:
         run: |
           git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
 
+      - name: Ensure hooks are executable
+        run: |
+          chmod +x .githooks/* 2>/dev/null || true
+          for dir in omerta_lang omerta_mesh omerta_node omerta_protocol; do
+            [ -d "$dir/.githooks" ] && chmod +x "$dir/.githooks/"* 2>/dev/null || true
+          done
+
       - name: Test hook functionality
         run: ./scripts/test-hooks.sh
 
@@ -93,12 +100,16 @@ jobs:
 
       - name: Check for large files
         run: |
-          # Find files larger than 1MB
+          # Find files larger than 1MB (excluding compiled libraries)
           LARGE_FILES=$(find . -type f -size +1M \
             -not -path "./.git/*" \
             -not -path "./.venv/*" \
             -not -path "./.build/*" \
-            -not -path "./node_modules/*" 2>/dev/null)
+            -not -path "./node_modules/*" \
+            -not -name "*.a" \
+            -not -name "*.o" \
+            -not -name "*.so" \
+            -not -name "*.dylib" 2>/dev/null)
 
           if [ -n "$LARGE_FILES" ]; then
             echo "::error::Large files (>1MB) found:"

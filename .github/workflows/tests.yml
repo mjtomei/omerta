@@ -67,6 +67,7 @@ jobs:
 
       - name: Checkout public submodules
         run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
           git submodule update --init --depth=1 omerta_lang omerta_protocol
 
       - name: Run tests
@@ -90,6 +91,7 @@ jobs:
 
       - name: Checkout public submodules
         run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
           git submodule update --init --depth=1 omerta_node omerta_mesh
 
       - name: Build and test omerta_node

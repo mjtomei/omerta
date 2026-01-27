@@ -6,8 +6,6 @@
 # Usage: ./scripts/test-hooks.sh
 #
 
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
@@ -20,7 +18,6 @@ NC='\033[0m'
 PASSED=0
 FAILED=0
 
-# Ensure hooks are configured
 setup_hooks() {
     for dir in "$ROOT_DIR" "$ROOT_DIR"/omerta_lang "$ROOT_DIR"/omerta_mesh "$ROOT_DIR"/omerta_node "$ROOT_DIR"/omerta_protocol; do
         if [ -d "$dir/.githooks" ]; then
@@ -29,7 +26,6 @@ setup_hooks() {
     done
 }
 
-# Test helper: expects commit to be blocked
 expect_blocked() {
     local test_name="$1"
     local test_file="$2"
@@ -37,15 +33,14 @@ expect_blocked() {
     local test_dir="${4:-.}"
 
     cd "$ROOT_DIR/$test_dir"
-
     echo "$test_content" > "$test_file"
     git add "$test_file"
 
     if git commit -m "test: $test_name" 2>&1 | grep -q "Commit blocked\|ERROR:"; then
-        echo -e "${GREEN}✓ PASS${NC}: $test_name (blocked as expected)"
+        echo -e "${GREEN}PASS${NC}: $test_name (blocked as expected)"
         ((PASSED++))
     else
-        echo -e "${RED}✗ FAIL${NC}: $test_name (should have been blocked)"
+        echo -e "${RED}FAIL${NC}: $test_name (should have been blocked)"
         ((FAILED++))
     fi
 
@@ -54,7 +49,6 @@ expect_blocked() {
     cd "$ROOT_DIR"
 }
 
-# Test helper: expects commit to succeed
 expect_allowed() {
     local test_name="$1"
     local test_file="$2"
@@ -62,16 +56,15 @@ expect_allowed() {
     local test_dir="${4:-.}"
 
     cd "$ROOT_DIR/$test_dir"
-
     echo "$test_content" > "$test_file"
     git add "$test_file"
 
-    if git commit -m "test: $test_name" 2>&1 >/dev/null; then
-        echo -e "${GREEN}✓ PASS${NC}: $test_name (allowed as expected)"
+    if git commit -m "test: $test_name" >/dev/null 2>&1; then
+        echo -e "${GREEN}PASS${NC}: $test_name (allowed as expected)"
         git reset --soft HEAD~1 2>/dev/null || true
         ((PASSED++))
     else
-        echo -e "${RED}✗ FAIL${NC}: $test_name (should have been allowed)"
+        echo -e "${RED}FAIL${NC}: $test_name (should have been allowed)"
         ((FAILED++))
     fi
 
@@ -99,21 +92,16 @@ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUA
 
 # API keys and passwords
 expect_blocked "API key assignment" "config.py" 'api_key = "sk-abc123def456ghi789"'
-
-expect_blocked "Password in config" "settings.json" '{"password": "supersecret123"}'
-
-expect_blocked "AWS Access Key ID" "aws.conf" 'AWS_ACCESS_KEY_ID=AKIAIOSFODNN7REALKEY'
-
-expect_blocked "AWS Secret Key" "aws.conf" 'AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfi'
+expect_blocked "Secret key" "settings.py" 'secret_key = "mysupersecret123"'
+expect_blocked "AWS Access Key" "aws.conf" 'AWS_ACCESS_KEY_ID=AKIAREALKEY12345678'
+expect_blocked "AWS Secret Key" "aws.conf" 'AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG'
 
 # False positives that should be allowed
-expect_allowed "Example placeholder" "docs.md" '# Set your API key
-api_key = "YOUR_API_KEY_HERE"'
-
-expect_allowed "Template config" "template.yaml" 'password: <your-password-here>'
-
+expect_allowed "Placeholder API key" "docs.md" 'api_key = "YOUR_API_KEY_HERE"'
+expect_allowed "Template password" "template.yaml" 'password: <your-password-here>'
 expect_allowed "Normal code" "app.py" 'def get_user():
     return {"name": "test"}'
+expect_allowed "Comment with example" "config.py" '# Example: api_key = "your_key_here"'
 
 # Test in submodule if available
 if [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then

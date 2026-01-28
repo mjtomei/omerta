@@ -2,6 +2,32 @@
 
 ---
 
+## Summary
+
+Omerta is a platform for ephemeral compute swarms which allows providers to share their compute without worrying about what is being run. It does this by deleting VMs after use and requiring all networking traffic go through a VPN served by the compute consumer. This decreases risks of providing compute in a swarm without requiring heavyweight mechanisms for encrypted computation or identity attestation. This functionality is built on top of a new mesh networking library which supports encrypted communication and seamless reconnection on session interruptions from either side.
+
+Omerta also includes a protocol and associated programming language for specifying transactions on a novel blockchain which supports a type of eventual consistency for which there is never a single global consensus. This greatly reduces the overhead of currency and identity management without losing the benefits of blockchains. The ability to tolerate a lack of a single global consensus is accomplished by moving trust into explicit mechanisms for granting trust and verifying that trust is not abused which are recorded on-chain. Transactions on this blockchain are described using a new language describing Mealy machines and adopting a lockless programming style for synchronization.
+
+In order to gain confidence in the technology, we simulate economic actors participating in transactions and attempting to exploit the system. We study various types of economic participants and compute market conditions, and we borrow from an existing blockchain network simulation methodology to try to maintain accuracy in the performance characteristics of networking between participants. We also study the potential economic impact for existing cloud providers and potential market participants as well as various attack scenarios with higher level simulation methodologies.
+
+---
+
+## Why This Might Work Now
+
+Prior attempts at decentralized compute (Golem, iExec, BOINC) faced real limitations:
+- Humans don't want to manage unreliable infrastructure
+- Blockchain consensus overhead erased the cost advantage
+- Complex setup limited participation to experts
+- Token economics created extractive incentives
+
+Machine intelligence solves each of these problems:
+- Machines can orchestrate parallel workloads across unreliable infrastructure—retrying, rerouting, recovering—in ways humans never would. What's friction for humans is normal operation for machines.
+- Trust measurement at scale was impractical when humans had to rate each other. Automated verification of every transaction enables trust computation that prior systems could only theorize about.
+- We remove friction during onboarding through app store compatibility and user space execution. And we choose a simpler software architecture over unclear benefits from more complex mechanisms for managing cloud compute. Machine intelligences have shown a capability to handle the more diverse and unpredictable compute environments that will be exposed as a result.
+- An infrastructure project can have benefits beyond what are attainable with things that work at smaller scales. The introduction of a new market comes with insider benefits that likely increase with good early choices that increase user trust like open sourcing the code and not retaining coins for yourself.
+
+---
+
 ## Project Status
 
 See [plans/notes.txt](plans/notes.txt) for the latest human-managed TODO list.
@@ -27,32 +53,6 @@ The blockchain and economic layer is not yet functional. Current work is focused
 - **Technical papers** - Early drafts with LaTeX infrastructure in place
 
 **In progress:** Completing draft transactions 02-05, paper content (protocol specification, simulation methodology, consistency guarantees), agent-based attack simulations
-
----
-
-## Summary
-
-Omerta is a platform for ephemeral compute swarms which allows providers to share their compute without worrying about what is being run. It does this by deleting VMs after use and requiring all networking traffic go through a VPN served by the compute consumer. This decreases risks of providing compute in a swarm without requiring heavyweight mechanisms for encrypted computation or identity attestation. This functionality is built on top of a new mesh networking library which supports encrypted communication and seamless reconnection on session interruptions from either side.
-
-Omerta also includes a protocol and associated programming language for specifying transactions on a novel blockchain which supports a type of eventual consistency for which there is never a single global consensus. This greatly reduces the overhead of currency and identity management without losing the benefits of blockchains. The ability to tolerate a lack of a single global consensus is accomplished by moving trust into explicit mechanisms for granting trust and verifying that trust is not abused which are recorded on-chain. Transactions on this blockchain are described using a new language describing Mealy machines and adopting a lockless programming style for synchronization.
-
-In order to gain confidence in the technology, we simulate economic actors participating in transactions and attempting to exploit the system. We study various types of economic participants and compute market conditions, and we borrow from an existing blockchain network simulation methodology to try to maintain accuracy in the performance characteristics of networking between participants. We also study the potential economic impact for existing cloud providers and potential market participants as well as various attack scenarios with higher level simulation methodologies.
-
----
-
-## Why This Might Work Now
-
-Prior attempts at decentralized compute (Golem, iExec, BOINC) faced real limitations:
-- Humans don't want to manage unreliable infrastructure
-- Blockchain consensus overhead erased the cost advantage
-- Complex setup limited participation to experts
-- Token economics created extractive incentives
-
-Machine intelligence solves each of these problems:
-- Machines can orchestrate parallel workloads across unreliable infrastructure—retrying, rerouting, recovering—in ways humans never would. What's friction for humans is normal operation for machines.
-- Trust measurement at scale was impractical when humans had to rate each other. Automated verification of every transaction enables trust computation that prior systems could only theorize about.
-- We remove friction during onboarding through app store compatibility and user space execution. And we choose a simpler software architecture over unclear benefits from more complex mechanisms for managing cloud compute. Machine intelligences have shown a capability to handle the more diverse and unpredictable compute environments that will be exposed as a result.
-- An infrastructure project can have benefits beyond what are attainable with things that work at smaller scales. The introduction of a new market comes with insider benefits that likely increase with good early choices that increase user trust like open sourcing the code and not retaining coins for yourself.
 
 ---
 

@@ -247,39 +247,9 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          dnf install -y git make tar gzip which
-          # Install Go from source (Amazon Linux doesn't have recent Go in repos)
-          curl -LO https://go.dev/dl/go1.21.13.linux-amd64.tar.gz
-          tar -C /usr/local -xzf go1.21.13.linux-amd64.tar.gz
-          export PATH=$PATH:/usr/local/go/bin
-          echo "/usr/local/go/bin" >> $GITHUB_PATH
-
-      - name: Install Swift
-        run: |
-          # Install Swift dependencies
-          dnf install -y \
-            binutils \
-            gcc \
-            glibc-static \
-            gzip \
-            libbsd \
-            libcurl-devel \
-            libedit \
-            libicu \
-            libstdc++-static \
-            libuuid \
-            libxml2-devel \
-            ncurses-devel \
-            python3 \
-            sqlite-devel \
-            tar \
-            tzdata \
-            zlib-devel
-          # Download and install Swift for Amazon Linux 2023
-          curl -LO https://download.swift.org/swift-6.0.3-release/amazonlinux2023/swift-6.0.3-RELEASE/swift-6.0.3-RELEASE-amazonlinux2023.tar.gz
-          tar -xzf swift-6.0.3-RELEASE-amazonlinux2023.tar.gz
-          mv swift-6.0.3-RELEASE-amazonlinux2023 /opt/swift
-          echo "/opt/swift/usr/bin" >> $GITHUB_PATH
+          dnf install -y git make tar gzip which golang
+          # Swift is available via dnf on Amazon Linux 2023
+          dnf install -y swiftlang
 
       - uses: actions/checkout@v4
 
@@ -290,25 +260,18 @@ jobs:
 
       - name: Build libnetstack
         working-directory: omerta_mesh/Sources/OmertaTunnel/Netstack
-        run: |
-          export PATH=$PATH:/usr/local/go/bin
-          make install
+        run: make install
 
       - name: Build and test omerta_mesh with coverage
         working-directory: omerta_mesh
-        run: |
-          export PATH=$PATH:/opt/swift/usr/bin
-          swift test --enable-code-coverage
+        run: swift test --enable-code-coverage
 
       - name: Build and test omerta_node with coverage
         working-directory: omerta_node
-        run: |
-          export PATH=$PATH:/opt/swift/usr/bin
-          swift test --enable-code-coverage
+        run: swift test --enable-code-coverage
 
       - name: Generate coverage report
         run: |
-          export PATH=$PATH:/opt/swift/usr/bin
           # omerta_mesh coverage
           PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" 2>/dev/null | head -1)
           if [ -n "$PROFDATA_MESH" ]; then

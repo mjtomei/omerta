@@ -2,6 +2,34 @@
 
 ---
 
+## Project Status
+
+See [plans/notes.txt](plans/notes.txt) for the latest human-managed TODO list.
+
+### Compute Layer (functional prototype, currently broken)
+
+Currently migrating from a WireGuard-based VM-to-consumer link to a full virtual network built on the mesh. The end-to-end flow is broken during this transition.
+
+- **Mesh networking** - End-to-end encrypted P2P communication with NAT traversal, relay support, and TCP/UDP tunneling
+- **VM management** - Ephemeral VM lifecycle with Virtualization.framework (macOS) and QEMU/KVM (Linux)
+- **Provider daemon** - Receives compute requests and manages ephemeral VM lifecycle
+- **Network discovery** - Gossip-based peer discovery with multi-network support
+- **Infrastructure** - Terraform deployment for bootstrap servers with monitoring
+
+**In progress:** Virtual network implementation, consumer client and end-to-end flow, IPv6 NAT hole punching, macOS GUI, security hardening
+
+### Blockchain Protocol (early research prototype)
+
+The blockchain and economic layer is not yet functional. Current work is focused on protocol design, simulation, and validation.
+
+- **Protocol language** - Parser, validator, and code generators for `.omt` transaction specifications
+- **Transactions 00-01** - Escrow lock and cabal attestation defined and tested in simulation
+- **Technical papers** - Early drafts with LaTeX infrastructure in place
+
+**In progress:** Completing draft transactions 02-05, paper content (protocol specification, simulation methodology, consistency guarantees), agent-based attack simulations
+
+---
+
 ## Summary
 
 Omerta is a platform for ephemeral compute swarms which allows providers to share their compute without worrying about what is being run. It does this by deleting VMs after use and requiring all networking traffic go through a VPN served by the compute consumer. This decreases risks of providing compute in a swarm without requiring heavyweight mechanisms for encrypted computation or identity attestation. This functionality is built on top of a new mesh networking library which supports encrypted communication and seamless reconnection on session interruptions from either side.
@@ -32,14 +60,14 @@ Machine intelligence solves each of these problems:
 
 This is the top-level repository for the Omerta project. The codebase is organized into focused submodules:
 
-### [omerta_node](omerta_node/)
+### [omerta_node](https://github.com/mjtomei/omerta_node)
 
 Swift application implementing provider and consumer nodes. Handles VM management, CLI tooling, and orchestration.
 
 - **Sources**: OmertaCore, OmertaConsumer, OmertaProvider, OmertaVM, OmertaDaemon, OmertaCLI
 - **Testing**: `swift test`
 
-### [omerta_mesh](omerta_mesh/)
+### [omerta_mesh](https://github.com/mjtomei/omerta_mesh)
 
 Peer-to-peer mesh networking layer. Handles NAT traversal, peer discovery, encrypted communication, and the wire protocol.
 
@@ -47,7 +75,7 @@ Peer-to-peer mesh networking layer. Handles NAT traversal, peer discovery, encry
 - **Features**: ChaCha20-Poly1305 encryption, X25519 key exchange, channel-based messaging
 - **Testing**: `swift test`
 
-### [omerta_lang](omerta_lang/)
+### [omerta_lang](https://github.com/mjtomei/omerta_lang)
 
 Transaction language toolchain for the `.omt` protocol specification language.
 
@@ -56,7 +84,7 @@ Transaction language toolchain for the `.omt` protocol specification language.
 - **Editors**: Syntax highlighting for Vim, PrismJS, HighlightJS
 - **Testing**: `pytest`
 
-### [omerta_protocol](omerta_protocol/)
+### [omerta_protocol](https://github.com/mjtomei/omerta_protocol)
 
 Protocol specifications and simulation infrastructure.
 
@@ -65,7 +93,7 @@ Protocol specifications and simulation infrastructure.
 - **Papers**: Economic analysis, mechanism design documents
 - **Testing**: `pytest simulations/tests/`
 
-### [omerta_infra](omerta_infra/)
+### [omerta_infra](https://github.com/mjtomei/omerta_infra)
 
 Infrastructure and deployment code for bootstrap servers.
 
@@ -100,7 +128,7 @@ Working documents for development - design docs, implementation plans, review cy
 
 Clone with submodules:
 ```bash
-git clone --recursive <repo-url>
+git clone --recursive https://github.com/mjtomei/omerta.git
 ```
 
 Or initialize submodules after cloning:

@@ -34,13 +34,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e omerta_lang
           pip install -r omerta_protocol/requirements.txt
-          pip install pytest
+          pip install pytest pytest-cov
 
-      - name: Test omerta_lang
-        run: pytest omerta_lang/tests/ -v
+      - name: Test omerta_lang with coverage
+        run: pytest omerta_lang/tests/ -v --cov=omerta_lang --cov-report=xml:coverage-lang.xml
 
-      - name: Test omerta_protocol
-        run: pytest omerta_protocol/simulations/tests/ -v
+      - name: Test omerta_protocol with coverage
+        run: pytest omerta_protocol/simulations/tests/ -v --cov=omerta_protocol --cov-report=xml:coverage-protocol.xml --cov-append
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-lang.xml,coverage-protocol.xml
+          flags: python-${{ matrix.python-version }}-${{ matrix.os }}
+          fail_ci_if_error: false
 
   python-tests-containers:
     name: Python (${{ matrix.container }})
@@ -80,16 +87,23 @@ jobs:
         if: contains(matrix.container, 'fedora')
         run: dnf install -y python3 python3-pip
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           python3 -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -e omerta_lang
           pip install -r omerta_protocol/requirements.txt
-          pip install pytest
-          pytest omerta_lang/tests/ -v
-          pytest omerta_protocol/simulations/tests/ -v
+          pip install pytest pytest-cov
+          pytest omerta_lang/tests/ -v --cov=omerta_lang --cov-report=xml:coverage-lang.xml
+          pytest omerta_protocol/simulations/tests/ -v --cov=omerta_protocol --cov-report=xml:coverage-protocol.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-lang.xml,coverage-protocol.xml
+          flags: python-${{ matrix.container }}
+          fail_ci_if_error: false
 
   # NOTE: Linux Swift tests disabled until libnetstack.a is built for x86_64
   # The pre-compiled library is ARM64 only. To re-enable:
@@ -110,13 +124,37 @@ jobs:
   #         git config --global --add safe.directory $GITHUB_WORKSPACE
   #         git submodule update --init --depth=1 omerta_node omerta_mesh
   #
-  #     - name: Build and test omerta_node
+  #     - name: Build and test omerta_node with coverage
   #       working-directory: omerta_node
-  #       run: swift test
+  #       run: swift test --enable-code-coverage
   #
-  #     - name: Build and test omerta_mesh
+  #     - name: Build and test omerta_mesh with coverage
   #       working-directory: omerta_mesh
-  #       run: swift test
+  #       run: swift test --enable-code-coverage
+  #
+  #     - name: Generate coverage report
+  #       run: |
+  #         # Find the coverage profdata files
+  #         PROFDATA_NODE=$(find omerta_node/.build -name "default.profdata" | head -1)
+  #         PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" | head -1)
+  #         # Convert to lcov format for Codecov
+  #         if [ -n "$PROFDATA_NODE" ]; then
+  #           xcrun llvm-cov export -format=lcov \
+  #             $(find omerta_node/.build -name "*.xctest" -o -name "omerta_nodePackageTests" | head -1) \
+  #             -instr-profile="$PROFDATA_NODE" > coverage-swift-node.lcov 2>/dev/null || true
+  #         fi
+  #         if [ -n "$PROFDATA_MESH" ]; then
+  #           xcrun llvm-cov export -format=lcov \
+  #             $(find omerta_mesh/.build -name "*.xctest" -o -name "omerta_meshPackageTests" | head -1) \
+  #             -instr-profile="$PROFDATA_MESH" > coverage-swift-mesh.lcov 2>/dev/null || true
+  #         fi
+  #
+  #     - name: Upload coverage to Codecov
+  #       uses: codecov/codecov-action@v4
+  #       with:
+  #         files: coverage-swift-node.lcov,coverage-swift-mesh.lcov
+  #         flags: swift-linux
+  #         fail_ci_if_error: false
 
   # NOTE: Swift tests disabled until libnetstack.a linking is fixed
   # The omerta_node package depends on omerta_mesh which requires CNetstack,
@@ -138,10 +176,34 @@ jobs:
   #     - name: Select Xcode
   #       run: sudo xcode-select -s /Applications/Xcode.app
   #
-  #     - name: Build and test omerta_node
+  #     - name: Build and test omerta_node with coverage
   #       working-directory: omerta_node
-  #       run: swift test
+  #       run: swift test --enable-code-coverage
   #
-  #     - name: Build and test omerta_mesh
+  #     - name: Build and test omerta_mesh with coverage
   #       working-directory: omerta_mesh
-  #       run: swift test
+  #       run: swift test --enable-code-coverage
+  #
+  #     - name: Generate coverage report
+  #       run: |
+  #         # Find the coverage profdata files
+  #         PROFDATA_NODE=$(find omerta_node/.build -name "default.profdata" | head -1)
+  #         PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" | head -1)
+  #         # Convert to lcov format for Codecov
+  #         if [ -n "$PROFDATA_NODE" ]; then
+  #           xcrun llvm-cov export -format=lcov \
+  #             $(find omerta_node/.build -name "*.xctest" -o -name "omerta_nodePackageTests" | head -1) \
+  #             -instr-profile="$PROFDATA_NODE" > coverage-swift-node.lcov 2>/dev/null || true
+  #         fi
+  #         if [ -n "$PROFDATA_MESH" ]; then
+  #           xcrun llvm-cov export -format=lcov \
+  #             $(find omerta_mesh/.build -name "*.xctest" -o -name "omerta_meshPackageTests" | head -1) \
+  #             -instr-profile="$PROFDATA_MESH" > coverage-swift-mesh.lcov 2>/dev/null || true
+  #         fi
+  #
+  #     - name: Upload coverage to Codecov
+  #       uses: codecov/codecov-action@v4
+  #       with:
+  #         files: coverage-swift-node.lcov,coverage-swift-mesh.lcov
+  #         flags: swift-macos
+  #         fail_ci_if_error: false

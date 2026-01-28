@@ -60,7 +60,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: ['debian:bookworm', 'fedora:40']
+        include:
+          - container: 'debian:bookworm'
+            artifact_name: 'debian-bookworm'
+          - container: 'fedora:40'
+            artifact_name: 'fedora-40'
 
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
@@ -114,7 +118,7 @@ jobs:
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.container }}
+          name: coverage-${{ matrix.artifact_name }}
           path: coverage-*.xml
 
   # NOTE: Linux Swift tests disabled until libnetstack.a is built for x86_64

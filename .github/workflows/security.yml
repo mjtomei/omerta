@@ -16,12 +16,12 @@ jobs:
 
       - name: Checkout public submodules
         run: |
-          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
+          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Ensure hooks are executable
         run: |
           chmod +x .githooks/* 2>/dev/null || true
-          for dir in omerta_lang omerta_mesh omerta_node omerta_protocol; do
+          for dir in omerta_infra omerta_lang omerta_mesh omerta_node omerta_protocol; do
             [ -d "$dir/.githooks" ] && chmod +x "$dir/.githooks/"* 2>/dev/null || true
           done
 
@@ -37,7 +37,7 @@ jobs:
 
       - name: Checkout public submodules
         run: |
-          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
+          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Verify hooks are in sync
         run: ./scripts/check-hooks-sync.sh
@@ -53,7 +53,7 @@ jobs:
 
       - name: Checkout public submodules
         run: |
-          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
+          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Check for sensitive patterns
         run: |
@@ -96,7 +96,7 @@ jobs:
 
       - name: Checkout public submodules
         run: |
-          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
+          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Check for large files
         run: |
@@ -128,7 +128,7 @@ jobs:
 
       - name: Checkout public submodules
         run: |
-          git submodule update --init --depth=1 omerta_lang omerta_protocol omerta_node omerta_mesh
+          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
 
       - name: Check for key files
         run: |

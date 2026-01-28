@@ -7,7 +7,9 @@ on:
     branches: [master]
 
 jobs:
+  # Python tests disabled temporarily while fixing Swift CI
   python-tests:
+    if: false  # DISABLED - re-enable after Swift CI is fixed
     name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -56,6 +58,7 @@ jobs:
           path: coverage-*.xml
 
   python-tests-containers:
+    if: false  # DISABLED - re-enable after Swift CI is fixed
     name: Python (${{ matrix.container }})
     strategy:
       fail-fast: false

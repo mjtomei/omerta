@@ -1,0 +1,168 @@
+name: Swift Test (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      package-path:
+        description: 'Path to Swift package (relative to repo root)'
+        required: true
+        type: string
+      package-name:
+        description: 'Name of the package for artifact naming'
+        required: true
+        type: string
+      needs-libnetstack:
+        description: 'Whether to build libnetstack dependency'
+        type: boolean
+        default: false
+      libnetstack-path:
+        description: 'Path to libnetstack Makefile (relative to repo root)'
+        type: string
+        default: ''
+      platforms:
+        description: 'JSON array of platforms to test on'
+        type: string
+        default: '["macos", "ubuntu", "amazonlinux"]'
+
+jobs:
+  test-macos:
+    if: contains(fromJSON(inputs.platforms), 'macos')
+    name: macOS
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Go
+        if: inputs.needs-libnetstack
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build libnetstack
+        if: inputs.needs-libnetstack && inputs.libnetstack-path != ''
+        working-directory: ${{ inputs.libnetstack-path }}
+        run: make install
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build and test with coverage
+        working-directory: ${{ inputs.package-path }}
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          LLVM_COV=$(xcrun --find llvm-cov)
+          PROFDATA=$(find ${{ inputs.package-path }}/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA" ]; then
+            TEST_BIN=$(find ${{ inputs.package-path }}/.build -type f -name "*.xctest" -o -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN" ]; then
+              $LLVM_COV export -format=lcov "$TEST_BIN" -instr-profile="$PROFDATA" > coverage-${{ inputs.package-name }}.lcov 2>/dev/null || true
+            fi
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-${{ inputs.package-name }}.lcov
+          flags: ${{ inputs.package-name }}-macos
+          fail_ci_if_error: false
+
+  test-ubuntu:
+    if: contains(fromJSON(inputs.platforms), 'ubuntu')
+    name: Ubuntu
+    runs-on: ubuntu-24.04
+    container: swift:6.0-noble
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y git golang-go make
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Build libnetstack
+        if: inputs.needs-libnetstack && inputs.libnetstack-path != ''
+        working-directory: ${{ inputs.libnetstack-path }}
+        run: make install
+
+      - name: Build and test with coverage
+        working-directory: ${{ inputs.package-path }}
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          PROFDATA=$(find ${{ inputs.package-path }}/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA" ]; then
+            TEST_BIN=$(find ${{ inputs.package-path }}/.build -type f -perm /111 -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN" ]; then
+              llvm-cov export -format=lcov "$TEST_BIN" -instr-profile="$PROFDATA" > coverage-${{ inputs.package-name }}.lcov 2>/dev/null || true
+            fi
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-${{ inputs.package-name }}.lcov
+          flags: ${{ inputs.package-name }}-ubuntu
+          fail_ci_if_error: false
+
+  test-amazonlinux:
+    if: contains(fromJSON(inputs.platforms), 'amazonlinux')
+    name: Amazon Linux
+    runs-on: ubuntu-24.04
+    container: amazonlinux:2023
+
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y git make tar gzip which
+          dnf install -y swiftlang
+          # Install Go 1.25 (required by go.mod) - dnf only has older version
+          curl -LO https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
+          tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Build libnetstack
+        if: inputs.needs-libnetstack && inputs.libnetstack-path != ''
+        working-directory: ${{ inputs.libnetstack-path }}
+        run: |
+          export PATH=/usr/local/go/bin:$PATH
+          make install
+
+      - name: Build and test with coverage
+        working-directory: ${{ inputs.package-path }}
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          PROFDATA=$(find ${{ inputs.package-path }}/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA" ]; then
+            TEST_BIN=$(find ${{ inputs.package-path }}/.build -type f -perm /111 -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN" ]; then
+              llvm-cov export -format=lcov "$TEST_BIN" -instr-profile="$PROFDATA" > coverage-${{ inputs.package-name }}.lcov 2>/dev/null || true
+            fi
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-${{ inputs.package-name }}.lcov
+          flags: ${{ inputs.package-name }}-amazonlinux
+          fail_ci_if_error: false

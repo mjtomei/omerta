@@ -247,9 +247,13 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          dnf install -y git make tar gzip which golang
+          dnf install -y git make tar gzip which
           # Swift is available via dnf on Amazon Linux 2023
           dnf install -y swiftlang
+          # Install Go 1.25 (required by go.mod) - dnf only has older version
+          curl -LO https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
+          tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
 
       - uses: actions/checkout@v4
 
@@ -260,7 +264,9 @@ jobs:
 
       - name: Build libnetstack
         working-directory: omerta_mesh/Sources/OmertaTunnel/Netstack
-        run: make install
+        run: |
+          export PATH=/usr/local/go/bin:$PATH
+          make install
 
       - name: Build and test omerta_mesh with coverage
         working-directory: omerta_mesh

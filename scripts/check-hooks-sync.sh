@@ -6,6 +6,7 @@ set -e
 
 PARENT_HOOKS=".githooks"
 SUBMODULES=(
+    "omerta_infra"
     "omerta_lang"
     "omerta_mesh"
     "omerta_node"

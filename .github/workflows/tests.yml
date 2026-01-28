@@ -37,10 +37,10 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Test omerta_lang with coverage
-        run: pytest omerta_lang/tests/ -v --cov=omerta_lang --cov-report=xml:coverage-lang.xml
+        run: pytest omerta_lang/tests/ -v --cov=omerta_lang --cov-report=term --cov-report=xml:coverage-lang.xml
 
       - name: Test omerta_protocol with coverage
-        run: pytest omerta_protocol/simulations/tests/ -v --cov=omerta_protocol --cov-report=xml:coverage-protocol.xml --cov-append
+        run: pytest omerta_protocol/simulations/tests/ -v --cov=omerta_protocol --cov-report=term --cov-report=xml:coverage-protocol.xml --cov-append
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -48,6 +48,12 @@ jobs:
           files: coverage-lang.xml,coverage-protocol.xml
           flags: python-${{ matrix.python-version }}-${{ matrix.os }}
           fail_ci_if_error: false
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.os }}
+          path: coverage-*.xml
 
   python-tests-containers:
     name: Python (${{ matrix.container }})
@@ -95,8 +101,8 @@ jobs:
           pip install -e omerta_lang
           pip install -r omerta_protocol/requirements.txt
           pip install pytest pytest-cov
-          pytest omerta_lang/tests/ -v --cov=omerta_lang --cov-report=xml:coverage-lang.xml
-          pytest omerta_protocol/simulations/tests/ -v --cov=omerta_protocol --cov-report=xml:coverage-protocol.xml
+          pytest omerta_lang/tests/ -v --cov=omerta_lang --cov-report=term --cov-report=xml:coverage-lang.xml
+          pytest omerta_protocol/simulations/tests/ -v --cov=omerta_protocol --cov-report=term --cov-report=xml:coverage-protocol.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -104,6 +110,12 @@ jobs:
           files: coverage-lang.xml,coverage-protocol.xml
           flags: python-${{ matrix.container }}
           fail_ci_if_error: false
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.container }}
+          path: coverage-*.xml
 
   # NOTE: Linux Swift tests disabled until libnetstack.a is built for x86_64
   # The pre-compiled library is ARM64 only. To re-enable:

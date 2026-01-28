@@ -14,6 +14,7 @@ jobs:
   check-submodule-ci:
     name: Verify Submodule CI
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -28,111 +29,174 @@ jobs:
           echo "lang_sha=$(git submodule status omerta_lang | awk '{print $1}' | tr -d '+-')" >> $GITHUB_OUTPUT
           echo "protocol_sha=$(git submodule status omerta_protocol | awk '{print $1}' | tr -d '+-')" >> $GITHUB_OUTPUT
 
-      - name: Check omerta_mesh CI
+      - name: Wait for omerta_mesh CI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           SHA="${{ steps.submodules.outputs.mesh_sha }}"
-          echo "Checking omerta_mesh CI for commit ${SHA:0:8}..."
+          echo "Waiting for omerta_mesh CI for commit ${SHA:0:8}..."
 
-          # Get workflow runs for this commit
-          RESULT=$(gh api repos/mjtomei/omerta_mesh/actions/runs \
-            --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
-            2>/dev/null | head -1)
+          MAX_ATTEMPTS=60  # 10 minutes max (60 * 10 seconds)
+          ATTEMPT=0
 
-          if [ -z "$RESULT" ]; then
-            echo "::warning::No CI run found for omerta_mesh commit $SHA"
-            echo "This may be expected if the submodule workflow hasn't been set up yet."
-          else
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            RESULT=$(gh api repos/mjtomei/omerta_mesh/actions/runs \
+              --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
+              2>/dev/null | head -1)
+
+            if [ -z "$RESULT" ]; then
+              echo "No CI run found yet for commit $SHA (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)"
+              sleep 10
+              ATTEMPT=$((ATTEMPT+1))
+              continue
+            fi
+
             STATUS=$(echo "$RESULT" | jq -r '.status')
             CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion')
-            echo "Status: $STATUS, Conclusion: $CONCLUSION"
 
-            if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" != "success" ]; then
-              echo "::error::omerta_mesh CI failed for commit $SHA"
-              exit 1
-            elif [ "$STATUS" != "completed" ]; then
-              echo "::warning::omerta_mesh CI still running for commit $SHA"
+            if [ "$STATUS" = "completed" ]; then
+              echo "CI completed with conclusion: $CONCLUSION"
+              if [ "$CONCLUSION" != "success" ]; then
+                echo "::error::omerta_mesh CI failed for commit $SHA"
+                exit 1
+              fi
+              echo "omerta_mesh CI passed!"
+              exit 0
             fi
-          fi
 
-      - name: Check omerta_node CI
+            echo "CI still running (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)..."
+            sleep 10
+            ATTEMPT=$((ATTEMPT+1))
+          done
+
+          echo "::error::Timeout waiting for omerta_mesh CI to complete"
+          exit 1
+
+      - name: Wait for omerta_node CI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           SHA="${{ steps.submodules.outputs.node_sha }}"
-          echo "Checking omerta_node CI for commit ${SHA:0:8}..."
+          echo "Waiting for omerta_node CI for commit ${SHA:0:8}..."
 
-          RESULT=$(gh api repos/mjtomei/omerta_node/actions/runs \
-            --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
-            2>/dev/null | head -1)
+          MAX_ATTEMPTS=60
+          ATTEMPT=0
 
-          if [ -z "$RESULT" ]; then
-            echo "::warning::No CI run found for omerta_node commit $SHA"
-            echo "This may be expected if the submodule workflow hasn't been set up yet."
-          else
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            RESULT=$(gh api repos/mjtomei/omerta_node/actions/runs \
+              --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
+              2>/dev/null | head -1)
+
+            if [ -z "$RESULT" ]; then
+              echo "No CI run found yet for commit $SHA (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)"
+              sleep 10
+              ATTEMPT=$((ATTEMPT+1))
+              continue
+            fi
+
             STATUS=$(echo "$RESULT" | jq -r '.status')
             CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion')
-            echo "Status: $STATUS, Conclusion: $CONCLUSION"
 
-            if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" != "success" ]; then
-              echo "::error::omerta_node CI failed for commit $SHA"
-              exit 1
-            elif [ "$STATUS" != "completed" ]; then
-              echo "::warning::omerta_node CI still running for commit $SHA"
+            if [ "$STATUS" = "completed" ]; then
+              echo "CI completed with conclusion: $CONCLUSION"
+              if [ "$CONCLUSION" != "success" ]; then
+                echo "::error::omerta_node CI failed for commit $SHA"
+                exit 1
+              fi
+              echo "omerta_node CI passed!"
+              exit 0
             fi
-          fi
 
-      - name: Check omerta_lang CI
+            echo "CI still running (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)..."
+            sleep 10
+            ATTEMPT=$((ATTEMPT+1))
+          done
+
+          echo "::error::Timeout waiting for omerta_node CI to complete"
+          exit 1
+
+      - name: Wait for omerta_lang CI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           SHA="${{ steps.submodules.outputs.lang_sha }}"
-          echo "Checking omerta_lang CI for commit ${SHA:0:8}..."
+          echo "Waiting for omerta_lang CI for commit ${SHA:0:8}..."
 
-          RESULT=$(gh api repos/mjtomei/omerta_lang/actions/runs \
-            --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
-            2>/dev/null | head -1)
+          MAX_ATTEMPTS=60
+          ATTEMPT=0
 
-          if [ -z "$RESULT" ]; then
-            echo "::warning::No CI run found for omerta_lang commit $SHA"
-            echo "This may be expected if the submodule workflow hasn't been set up yet."
-          else
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            RESULT=$(gh api repos/mjtomei/omerta_lang/actions/runs \
+              --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
+              2>/dev/null | head -1)
+
+            if [ -z "$RESULT" ]; then
+              echo "No CI run found yet for commit $SHA (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)"
+              sleep 10
+              ATTEMPT=$((ATTEMPT+1))
+              continue
+            fi
+
             STATUS=$(echo "$RESULT" | jq -r '.status')
             CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion')
-            echo "Status: $STATUS, Conclusion: $CONCLUSION"
 
-            if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" != "success" ]; then
-              echo "::error::omerta_lang CI failed for commit $SHA"
-              exit 1
-            elif [ "$STATUS" != "completed" ]; then
-              echo "::warning::omerta_lang CI still running for commit $SHA"
+            if [ "$STATUS" = "completed" ]; then
+              echo "CI completed with conclusion: $CONCLUSION"
+              if [ "$CONCLUSION" != "success" ]; then
+                echo "::error::omerta_lang CI failed for commit $SHA"
+                exit 1
+              fi
+              echo "omerta_lang CI passed!"
+              exit 0
             fi
-          fi
 
-      - name: Check omerta_protocol CI
+            echo "CI still running (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)..."
+            sleep 10
+            ATTEMPT=$((ATTEMPT+1))
+          done
+
+          echo "::error::Timeout waiting for omerta_lang CI to complete"
+          exit 1
+
+      - name: Wait for omerta_protocol CI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           SHA="${{ steps.submodules.outputs.protocol_sha }}"
-          echo "Checking omerta_protocol CI for commit ${SHA:0:8}..."
+          echo "Waiting for omerta_protocol CI for commit ${SHA:0:8}..."
 
-          RESULT=$(gh api repos/mjtomei/omerta_protocol/actions/runs \
-            --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
-            2>/dev/null | head -1)
+          MAX_ATTEMPTS=60
+          ATTEMPT=0
 
-          if [ -z "$RESULT" ]; then
-            echo "::warning::No CI run found for omerta_protocol commit $SHA"
-            echo "This may be expected if the submodule workflow hasn't been set up yet."
-          else
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            RESULT=$(gh api repos/mjtomei/omerta_protocol/actions/runs \
+              --jq ".workflow_runs[] | select(.head_sha == \"$SHA\" and .name == \"Tests\") | {status, conclusion}" \
+              2>/dev/null | head -1)
+
+            if [ -z "$RESULT" ]; then
+              echo "No CI run found yet for commit $SHA (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)"
+              sleep 10
+              ATTEMPT=$((ATTEMPT+1))
+              continue
+            fi
+
             STATUS=$(echo "$RESULT" | jq -r '.status')
             CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion')
-            echo "Status: $STATUS, Conclusion: $CONCLUSION"
 
-            if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" != "success" ]; then
-              echo "::error::omerta_protocol CI failed for commit $SHA"
-              exit 1
-            elif [ "$STATUS" != "completed" ]; then
-              echo "::warning::omerta_protocol CI still running for commit $SHA"
+            if [ "$STATUS" = "completed" ]; then
+              echo "CI completed with conclusion: $CONCLUSION"
+              if [ "$CONCLUSION" != "success" ]; then
+                echo "::error::omerta_protocol CI failed for commit $SHA"
+                exit 1
+              fi
+              echo "omerta_protocol CI passed!"
+              exit 0
             fi
-          fi
+
+            echo "CI still running (attempt $((ATTEMPT+1))/$MAX_ATTEMPTS)..."
+            sleep 10
+            ATTEMPT=$((ATTEMPT+1))
+          done
+
+          echo "::error::Timeout waiting for omerta_protocol CI to complete"
+          exit 1

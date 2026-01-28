@@ -121,105 +121,120 @@ jobs:
           name: coverage-${{ matrix.artifact_name }}
           path: coverage-*.xml
 
-  # NOTE: Linux Swift tests disabled until libnetstack.a is built for x86_64
-  # The pre-compiled library is ARM64 only. To re-enable:
-  # 1. Build libnetstack.a from source on x86_64
-  # 2. Include both ARM64 and x86_64 variants, or
-  # 3. Build from source in CI (requires Go toolchain)
-  #
-  # swift-tests-linux:
-  #   name: Swift (Ubuntu)
-  #   runs-on: ubuntu-24.04
-  #   container: swift:6.0-noble
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #
-  #     - name: Checkout public submodules
-  #       run: |
-  #         git config --global --add safe.directory $GITHUB_WORKSPACE
-  #         git submodule update --init --depth=1 omerta_node omerta_mesh
-  #
-  #     - name: Build and test omerta_node with coverage
-  #       working-directory: omerta_node
-  #       run: swift test --enable-code-coverage
-  #
-  #     - name: Build and test omerta_mesh with coverage
-  #       working-directory: omerta_mesh
-  #       run: swift test --enable-code-coverage
-  #
-  #     - name: Generate coverage report
-  #       run: |
-  #         # Find the coverage profdata files
-  #         PROFDATA_NODE=$(find omerta_node/.build -name "default.profdata" | head -1)
-  #         PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" | head -1)
-  #         # Convert to lcov format for Codecov
-  #         if [ -n "$PROFDATA_NODE" ]; then
-  #           xcrun llvm-cov export -format=lcov \
-  #             $(find omerta_node/.build -name "*.xctest" -o -name "omerta_nodePackageTests" | head -1) \
-  #             -instr-profile="$PROFDATA_NODE" > coverage-swift-node.lcov 2>/dev/null || true
-  #         fi
-  #         if [ -n "$PROFDATA_MESH" ]; then
-  #           xcrun llvm-cov export -format=lcov \
-  #             $(find omerta_mesh/.build -name "*.xctest" -o -name "omerta_meshPackageTests" | head -1) \
-  #             -instr-profile="$PROFDATA_MESH" > coverage-swift-mesh.lcov 2>/dev/null || true
-  #         fi
-  #
-  #     - name: Upload coverage to Codecov
-  #       uses: codecov/codecov-action@v4
-  #       with:
-  #         files: coverage-swift-node.lcov,coverage-swift-mesh.lcov
-  #         flags: swift-linux
-  #         fail_ci_if_error: false
+  swift-tests-macos:
+    name: Swift (macOS)
+    runs-on: macos-latest
 
-  # NOTE: Swift tests disabled until libnetstack.a linking is fixed
-  # The omerta_node package depends on omerta_mesh which requires CNetstack,
-  # but the library has linking issues in CI. To fix:
-  # 1. Build libnetstack from source (requires Go) or
-  # 2. Include pre-built libraries for each architecture
-  #
-  # swift-tests-macos:
-  #   name: Swift (macOS)
-  #   runs-on: macos-latest
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #
-  #     - name: Checkout public submodules
-  #       run: |
-  #         git submodule update --init --depth=1 omerta_node omerta_mesh
-  #
-  #     - name: Select Xcode
-  #       run: sudo xcode-select -s /Applications/Xcode.app
-  #
-  #     - name: Build and test omerta_node with coverage
-  #       working-directory: omerta_node
-  #       run: swift test --enable-code-coverage
-  #
-  #     - name: Build and test omerta_mesh with coverage
-  #       working-directory: omerta_mesh
-  #       run: swift test --enable-code-coverage
-  #
-  #     - name: Generate coverage report
-  #       run: |
-  #         # Find the coverage profdata files
-  #         PROFDATA_NODE=$(find omerta_node/.build -name "default.profdata" | head -1)
-  #         PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" | head -1)
-  #         # Convert to lcov format for Codecov
-  #         if [ -n "$PROFDATA_NODE" ]; then
-  #           xcrun llvm-cov export -format=lcov \
-  #             $(find omerta_node/.build -name "*.xctest" -o -name "omerta_nodePackageTests" | head -1) \
-  #             -instr-profile="$PROFDATA_NODE" > coverage-swift-node.lcov 2>/dev/null || true
-  #         fi
-  #         if [ -n "$PROFDATA_MESH" ]; then
-  #           xcrun llvm-cov export -format=lcov \
-  #             $(find omerta_mesh/.build -name "*.xctest" -o -name "omerta_meshPackageTests" | head -1) \
-  #             -instr-profile="$PROFDATA_MESH" > coverage-swift-mesh.lcov 2>/dev/null || true
-  #         fi
-  #
-  #     - name: Upload coverage to Codecov
-  #       uses: codecov/codecov-action@v4
-  #       with:
-  #         files: coverage-swift-node.lcov,coverage-swift-mesh.lcov
-  #         flags: swift-macos
-  #         fail_ci_if_error: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout public submodules
+        run: |
+          git submodule update --init --depth=1 omerta_node omerta_mesh
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build libnetstack
+        working-directory: omerta_mesh/Sources/OmertaTunnel/Netstack
+        run: make install
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build and test omerta_mesh with coverage
+        working-directory: omerta_mesh
+        run: swift test --enable-code-coverage
+
+      - name: Build and test omerta_node with coverage
+        working-directory: omerta_node
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          # Find llvm-cov from Xcode
+          LLVM_COV=$(xcrun --find llvm-cov)
+
+          # omerta_mesh coverage
+          PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA_MESH" ]; then
+            TEST_BIN_MESH=$(find omerta_mesh/.build -type f -name "*.xctest" -o -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN_MESH" ]; then
+              $LLVM_COV export -format=lcov "$TEST_BIN_MESH" -instr-profile="$PROFDATA_MESH" > coverage-swift-mesh.lcov 2>/dev/null || true
+            fi
+          fi
+
+          # omerta_node coverage
+          PROFDATA_NODE=$(find omerta_node/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA_NODE" ]; then
+            TEST_BIN_NODE=$(find omerta_node/.build -type f -name "*.xctest" -o -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN_NODE" ]; then
+              $LLVM_COV export -format=lcov "$TEST_BIN_NODE" -instr-profile="$PROFDATA_NODE" > coverage-swift-node.lcov 2>/dev/null || true
+            fi
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-swift-mesh.lcov,coverage-swift-node.lcov
+          flags: swift-macos
+          fail_ci_if_error: false
+
+  swift-tests-linux:
+    name: Swift (Ubuntu)
+    runs-on: ubuntu-24.04
+    container: swift:6.0-noble
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y git golang-go
+
+      - uses: actions/checkout@v4
+
+      - name: Checkout public submodules
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git submodule update --init --depth=1 omerta_node omerta_mesh
+
+      - name: Build libnetstack
+        working-directory: omerta_mesh/Sources/OmertaTunnel/Netstack
+        run: make install
+
+      - name: Build and test omerta_mesh with coverage
+        working-directory: omerta_mesh
+        run: swift test --enable-code-coverage
+
+      - name: Build and test omerta_node with coverage
+        working-directory: omerta_node
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          # omerta_mesh coverage
+          PROFDATA_MESH=$(find omerta_mesh/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA_MESH" ]; then
+            TEST_BIN_MESH=$(find omerta_mesh/.build -type f -perm /111 -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN_MESH" ]; then
+              llvm-cov export -format=lcov "$TEST_BIN_MESH" -instr-profile="$PROFDATA_MESH" > coverage-swift-mesh.lcov 2>/dev/null || true
+            fi
+          fi
+
+          # omerta_node coverage
+          PROFDATA_NODE=$(find omerta_node/.build -name "default.profdata" 2>/dev/null | head -1)
+          if [ -n "$PROFDATA_NODE" ]; then
+            TEST_BIN_NODE=$(find omerta_node/.build -type f -perm /111 -name "*PackageTests" 2>/dev/null | head -1)
+            if [ -n "$TEST_BIN_NODE" ]; then
+              llvm-cov export -format=lcov "$TEST_BIN_NODE" -instr-profile="$PROFDATA_NODE" > coverage-swift-node.lcov 2>/dev/null || true
+            fi
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-swift-mesh.lcov,coverage-swift-node.lcov
+          flags: swift-linux
+          fail_ci_if_error: false

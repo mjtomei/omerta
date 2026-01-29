@@ -42,65 +42,142 @@ jobs:
       - name: Verify hooks are in sync
         run: ./scripts/check-hooks-sync.sh
 
-  sensitive-data:
-    name: Sensitive Data Scan
+  security-scan:
+    name: Security Scan
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Checkout public submodules
         run: |
           git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
 
-      - name: Check for sensitive patterns
+      - name: Check for sensitive data patterns
         run: |
-          # Patterns that indicate sensitive data (full PEM headers, not partial matches)
-          PATTERNS=(
+          FOUND=0
+
+          # --- Private key content patterns ---
+          KEY_PATTERNS=(
             '-----BEGIN RSA PRIVATE KEY-----'
             '-----BEGIN DSA PRIVATE KEY-----'
             '-----BEGIN EC PRIVATE KEY-----'
             '-----BEGIN OPENSSH PRIVATE KEY-----'
             '-----BEGIN PGP PRIVATE KEY-----'
-            'AWS_ACCESS_KEY_ID\s*='
-            'AWS_SECRET_ACCESS_KEY\s*='
+            'PRIVATE KEY'
           )
 
-          FOUND=0
-          for pattern in "${PATTERNS[@]}"; do
-            # Exclude test directories and .git
-            if grep -rniE "$pattern" \
+          # --- Credential assignment patterns ---
+          CREDENTIAL_PATTERNS=(
+            'password\s*[:=]\s*["'"'"'][^"'"'"']+'
+            'api[_-]?key\s*[:=]\s*["'"'"'][^"'"'"']+'
+            'secret[_-]?key\s*[:=]\s*["'"'"'][^"'"'"']+'
+          )
+
+          # --- Cloud & service provider keys ---
+          SERVICE_PATTERNS=(
+            'AWS_ACCESS_KEY_ID\s*[:=]'
+            'AWS_SECRET_ACCESS_KEY\s*[:=]'
+            'ANTHROPIC_API_KEY\s*[:=]'
+            'OPENAI_API_KEY\s*[:=]'
+          )
+
+          # --- Token patterns ---
+          TOKEN_PATTERNS=(
+            'ghp_[A-Za-z0-9]{36}'
+            'gho_[A-Za-z0-9]{36}'
+            'ghu_[A-Za-z0-9]{36}'
+            'ghs_[A-Za-z0-9]{36}'
+            'ghr_[A-Za-z0-9]{36}'
+            'sk_live_[A-Za-z0-9]+'
+            'rk_live_[A-Za-z0-9]+'
+            'xox[baprs]-[A-Za-z0-9-]+'
+            'SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}'
+            'npm_[A-Za-z0-9]{36}'
+            'pypi-[A-Za-z0-9_-]+'
+          )
+
+          # --- URL credentials and bearer tokens ---
+          URL_PATTERNS=(
+            '://[^/:]+:[^@]+@'
+            '[Bb]earer\s+[A-Za-z0-9_-]{20,}'
+          )
+
+          ALL_PATTERNS=("${KEY_PATTERNS[@]}" "${CREDENTIAL_PATTERNS[@]}" "${SERVICE_PATTERNS[@]}" "${TOKEN_PATTERNS[@]}" "${URL_PATTERNS[@]}")
+
+          EXCLUDE='\.git/|\.venv/|__pycache__/|node_modules/|\.build/'
+
+          for pattern in "${ALL_PATTERNS[@]}"; do
+            MATCHES=$(grep -rniE "$pattern" \
                 --include="*.swift" --include="*.py" --include="*.json" \
                 --include="*.yaml" --include="*.yml" --include="*.toml" \
-                . 2>/dev/null | grep -vE '\.git|\.venv|__pycache__|node_modules|/[Tt]ests?/'; then
-              echo "::error::Pattern '$pattern' found in repository"
+                --include="*.sh" --include="*.md" --include="*.txt" \
+                --include="*.cfg" --include="*.ini" --include="*.conf" \
+                --include="*.env*" --include="*.xml" --include="*.plist" \
+                . 2>/dev/null | grep -vE "$EXCLUDE" | grep -vE '/[Tt]ests?/' || true)
+
+            if [ -n "$MATCHES" ]; then
+              echo "::error::Sensitive pattern found: $pattern"
+              echo "$MATCHES" | head -5
+              echo ""
               FOUND=1
             fi
           done
 
           if [ $FOUND -eq 1 ]; then
-            echo "::error::Potential sensitive data found"
+            echo "::error::Potential sensitive data found in repository"
             exit 1
           fi
 
           echo "No sensitive data patterns found"
 
-  large-files:
-    name: Large File Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Checkout public submodules
+      - name: Check for .env files
         run: |
-          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
+          ENV_FILES=$(find . -type f \( \
+            -name ".env" -o \
+            -name ".env.local" -o \
+            -name ".env.production" -o \
+            -name ".env.development" -o \
+            -name ".env.staging" \
+            \) -not -path "./.git/*" 2>/dev/null)
+
+          if [ -n "$ENV_FILES" ]; then
+            echo "::error::.env files found in repository:"
+            echo "$ENV_FILES"
+            exit 1
+          fi
+
+          echo "No .env files found"
+
+      - name: Check for private key files
+        run: |
+          KEY_FILES=$(find . -type f \( \
+            -name "*.pem" -o \
+            -name "*.key" -o \
+            -name "*.p12" -o \
+            -name "*.pfx" -o \
+            -name "*.keystore" -o \
+            -name "*.jks" -o \
+            -name "id_rsa" -o \
+            -name "id_dsa" -o \
+            -name "id_ecdsa" -o \
+            -name "id_ed25519" -o \
+            -name "*service?account*.json" -o \
+            -name "token.json" -o \
+            -name "credentials.json" -o \
+            -name "secrets.json" \
+            \) -not -path "./.git/*" 2>/dev/null)
+
+          if [ -n "$KEY_FILES" ]; then
+            echo "::error::Private key or credential files found:"
+            echo "$KEY_FILES"
+            exit 1
+          fi
+
+          echo "No private key files found"
 
       - name: Check for large files
         run: |
-          # Find files larger than 1MB (excluding compiled libraries)
           LARGE_FILES=$(find . -type f -size +1M \
             -not -path "./.git/*" \
             -not -path "./.venv/*" \
@@ -118,36 +195,3 @@ jobs:
           fi
 
           echo "No large files found"
-
-  key-files:
-    name: Key File Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Checkout public submodules
-        run: |
-          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
-
-      - name: Check for key files
-        run: |
-          # Check for private key file extensions
-          KEY_FILES=$(find . -type f \( \
-            -name "*.pem" -o \
-            -name "*.key" -o \
-            -name "*.p12" -o \
-            -name "*.pfx" -o \
-            -name "id_rsa" -o \
-            -name "id_dsa" -o \
-            -name "id_ecdsa" -o \
-            -name "id_ed25519" \
-            \) -not -path "./.git/*" 2>/dev/null)
-
-          if [ -n "$KEY_FILES" ]; then
-            echo "::error::Private key files found:"
-            echo "$KEY_FILES"
-            exit 1
-          fi
-
-          echo "No private key files found"

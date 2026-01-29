@@ -191,8 +191,8 @@ echo ""
 echo "--- Pre-commit: Real IPs blocked even in source files ---"
 echo ""
 
-expect_blocked "Real LAN IP in source" "example.swift" 'let addr = "192.168.1.1"' "omerta_mesh"
-expect_blocked "Real LAN IP in test" "test-net.swift" 'let addr = "10.0.0.1"' "omerta_mesh"
+expect_blocked "Real LAN IP in source" "example.swift" 'let addr = "192.168.1.1"'
+expect_blocked "Real LAN IP in test" "test-net.swift" 'let addr = "10.0.0.1"'
 
 # Test in submodule if available
 if [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # This workflow verifies that submodule CI passed for the specific commits referenced.
 # Security checks run separately in security.yml.
 

@@ -252,7 +252,7 @@ ABSPATH_PATTERNS=(
     '/home/[a-zA-Z0-9_]+'
     '/Users/[a-zA-Z0-9_]+'
     '/tmp/[a-zA-Z0-9_]+'
-    '/var/[a-zA-Z0-9_]+/[a-zA-Z0-9_]+'
+    '/var/[a-zA-Z0-9_]+(/[a-zA-Z0-9_]+)?'
     '/opt/[a-zA-Z0-9_]+/[a-zA-Z0-9_]+'
 )
 

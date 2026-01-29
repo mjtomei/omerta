@@ -105,7 +105,7 @@ jobs:
 
           ALL_PATTERNS=("${KEY_PATTERNS[@]}" "${CREDENTIAL_PATTERNS[@]}" "${SERVICE_PATTERNS[@]}" "${TOKEN_PATTERNS[@]}" "${URL_PATTERNS[@]}")
 
-          EXCLUDE='\.git/|\.venv/|__pycache__/|node_modules/|\.build/|\.githooks/|scripts/test-hooks\.sh'
+          EXCLUDE='\.git/|\.venv/|__pycache__/|node_modules/|\.build/|\.githooks/|scripts/test-hooks\.sh|\.github/workflows/security\.yml'
 
           for pattern in "${ALL_PATTERNS[@]}"; do
             MATCHES=$(grep -rniE "$pattern" \

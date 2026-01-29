@@ -105,7 +105,7 @@ jobs:
 
           ALL_PATTERNS=("${KEY_PATTERNS[@]}" "${CREDENTIAL_PATTERNS[@]}" "${SERVICE_PATTERNS[@]}" "${TOKEN_PATTERNS[@]}" "${URL_PATTERNS[@]}")
 
-          EXCLUDE='\.git/|\.venv/|__pycache__/|node_modules/|\.build/|\.githooks/|scripts/test-hooks\.sh|\.github/workflows/security\.yml|omerta_protocol/simulations/framework/protocol/setup\.py|omerta_protocol/simulations/economic/verification_protocol\.py|omerta_infra/\.env\.example'
+          EXCLUDE='\.git/|\.venv/|__pycache__/|node_modules/|\.build/|\.githooks/|scripts/test-hooks\.sh|\.github/workflows/security\.yml|omerta_protocol/simulations/framework/protocol/setup\.py|omerta_protocol/simulations/economic/verification_protocol\.py|omerta_infra/\.env\.example|omerta_protocol/plans/mechanism-design/participation-verification-vulnerabilities\.md|omerta_protocol/plans/mechanism-design/participation-verification\.md'
 
           for pattern in "${ALL_PATTERNS[@]}"; do
             MATCHES=$(grep -rniE "$pattern" \

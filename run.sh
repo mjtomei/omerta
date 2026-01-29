@@ -1,1 +1,1 @@
-BINARY=/home/matt/bin/app
+APP=/opt/myapp/bin/server

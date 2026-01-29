@@ -163,7 +163,7 @@ expect_blocked "ip addr add" "setup.sh" 'ip addr add 10.0.0.2/24 dev eth0'
 expect_blocked "ssh sudo" "deploy.sh" 'ssh mac "sudo systemctl restart app"'
 
 # Machine-specific interfaces
-expect_blocked "Machine-specific NIC name" "setup.sh" 'IFACE=enP7s7'
+expect_blocked "Machine-specific NIC name" "setup.sh" 'IFACE=enp7s7'
 
 echo ""
 echo "--- Pre-commit: Absolute Path Detection ---"

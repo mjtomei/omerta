@@ -139,6 +139,61 @@ expect_allowed "Normal code" "app.py" 'def get_user():
 expect_allowed "Public key file" "server.pub" 'ssh-rsa AAAAB3NzaC1yc2E...'
 expect_allowed "Documentation" "README.md" '# Project README'
 
+echo ""
+echo "--- Pre-commit: Local Network State Detection ---"
+echo ""
+
+# LAN IP addresses
+expect_blocked "Private IP (192.168)" "deploy.sh" 'ssh 192.168.12.121 "echo hello"'
+expect_blocked "Private IP (10.x)" "config.sh" 'SERVER=10.0.0.1'
+expect_blocked "Private IP (172.16)" "run.sh" 'HOST=172.16.0.50'
+
+# Firewall commands
+expect_blocked "iptables command" "setup.sh" 'iptables -A INPUT -p tcp --dport 80 -j ACCEPT'
+expect_blocked "pfctl command" "setup.sh" 'echo "block all" | pfctl -ef -'
+expect_blocked "nftables command" "setup.sh" 'nft add rule inet filter input accept'
+
+# Traffic control
+expect_blocked "tc netem command" "test.sh" 'tc qdisc add dev eth0 root netem delay 100ms'
+
+# Interface manipulation
+expect_blocked "ip addr add" "setup.sh" 'ip addr add 10.0.0.2/24 dev eth0'
+
+# SSH with sudo
+expect_blocked "ssh sudo" "deploy.sh" 'ssh mac "sudo systemctl restart app"'
+
+# Machine-specific interfaces
+expect_blocked "Specific NIC name" "setup.sh" 'IFACE=enP7s7'
+
+echo ""
+echo "--- Pre-commit: Absolute Path Detection ---"
+echo ""
+
+expect_blocked "Home directory path" "run.sh" 'BINARY=/home/matt/bin/app'
+expect_blocked "macOS user path" "run.sh" 'CONFIG=/Users/johndoe/config.json'
+expect_blocked "Tmp path" "run.sh" 'LOGDIR=/tmp/myapp_logs'
+expect_blocked "Opt path" "test-opt-path.sh" 'APP=/opt/myapp/bin/server'
+
+# These should be allowed (standard system paths, shebangs)
+expect_allowed "Shebang" "run.sh" '#!/usr/bin/env bash
+echo "hello"'
+expect_allowed "System binary ref" "docs.md" 'Uses /usr/bin/env to locate interpreter'
+
+echo ""
+echo "--- Pre-commit: RFC 5737 Documentation IPs (should be allowed) ---"
+echo ""
+
+expect_allowed "RFC 5737 TEST-NET-1" "example.swift" 'let addr = "192.0.2.1"' "omerta_mesh"
+expect_allowed "RFC 5737 TEST-NET-2" "example.swift" 'let server = "198.51.100.50"' "omerta_mesh"
+expect_allowed "RFC 5737 TEST-NET-3" "example.swift" 'let host = "203.0.113.99"' "omerta_mesh"
+
+echo ""
+echo "--- Pre-commit: Real IPs blocked even in source files ---"
+echo ""
+
+expect_blocked "Real LAN IP in source" "example.swift" 'let addr = "192.168.1.1"' "omerta_mesh"
+expect_blocked "Real LAN IP in test" "test-net.swift" 'let addr = "10.0.0.1"' "omerta_mesh"
+
 # Test in submodule if available
 if [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then
     echo ""

@@ -32,7 +32,7 @@ update:
 		if [ "$$remote_sha" != "$$current_sha" ]; then \
 			echo "$$remote_sha" > "$$mod/.commit"; \
 			echo "Updated $$mod: $${current_sha:0:8} -> $${remote_sha:0:8}"; \
-			git add "$$mod/.commit"; \
+			git add -f "$$mod/.commit"; \
 			changed=1; \
 		else \
 			echo "$$mod is up to date ($${current_sha:0:8})"; \

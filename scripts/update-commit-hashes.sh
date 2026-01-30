@@ -22,7 +22,7 @@ for mod in "${MODULES[@]}"; do
 
     if [ "$remote_sha" != "$current_sha" ]; then
         echo "$remote_sha" > "$commit_file"
-        git add "$commit_file"
+        git add -f "$commit_file"
         echo "Updated $mod/.commit: ${current_sha:0:8} -> ${remote_sha:0:8}"
         changed=1
     fi

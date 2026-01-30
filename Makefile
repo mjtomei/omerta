@@ -17,6 +17,9 @@ all:
 			echo "$$mod already cloned"; \
 		fi; \
 	done
+	@for mod in $(MODULES); do \
+		git update-index --skip-worktree "$$mod/README.md" 2>/dev/null || true; \
+	done
 
 # Update .commit files to latest remote master SHA and commit
 update:

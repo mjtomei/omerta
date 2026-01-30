@@ -44,3 +44,24 @@ Thumbs.db
 ehthumbs.db
 ._*
 .DS_Store
+
+# Sub-repo clones (only .commit and REPO.md are tracked)
+omerta_node/*
+!omerta_node/.commit
+!omerta_node/REPO.md
+
+omerta_mesh/*
+!omerta_mesh/.commit
+!omerta_mesh/REPO.md
+
+omerta_lang/*
+!omerta_lang/.commit
+!omerta_lang/REPO.md
+
+omerta_protocol/*
+!omerta_protocol/.commit
+!omerta_protocol/REPO.md
+
+omerta_infra/*
+!omerta_infra/.commit
+!omerta_infra/REPO.md

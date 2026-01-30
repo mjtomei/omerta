@@ -24,7 +24,7 @@ setup_hooks() {
     git config user.name "Test User" 2>/dev/null || true
 
     for dir in "$ROOT_DIR" "$ROOT_DIR"/omerta_lang "$ROOT_DIR"/omerta_mesh "$ROOT_DIR"/omerta_node "$ROOT_DIR"/omerta_protocol; do
-        if [ -d "$dir/.githooks" ]; then
+        if [ -d "$dir/.git" ] && [ -d "$dir/.githooks" ]; then
             (cd "$dir" && git config core.hooksPath .githooks 2>/dev/null || true)
             (cd "$dir" && git config user.email "test@example.com" 2>/dev/null || true)
             (cd "$dir" && git config user.name "Test User" 2>/dev/null || true)
@@ -194,13 +194,13 @@ echo ""
 expect_blocked "Real LAN IP in source" "example.swift" 'let addr = "192.168.1.1"'
 expect_blocked "Real LAN IP in test" "test-net.swift" 'let addr = "10.0.0.1"'
 
-# Test in submodule if available
-if [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then
+# Test in sub-repo if cloned
+if [ -d "$ROOT_DIR/omerta_lang/.git" ] && [ -d "$ROOT_DIR/omerta_lang/.githooks" ]; then
     echo ""
-    echo "--- Submodule Tests (omerta_lang) ---"
+    echo "--- Sub-Repo Tests (omerta_lang) ---"
     echo ""
-    expect_blocked "Secret in submodule" "test-secret.py" 'secret_key = "abc123secret"' "omerta_lang"
-    expect_allowed "Normal file in submodule" "test-normal.md" '# Documentation' "omerta_lang"
+    expect_blocked "Secret in sub-repo" "test-secret.py" 'secret_key = "abc123secret"' "omerta_lang"
+    expect_allowed "Normal file in sub-repo" "test-normal.md" '# Documentation' "omerta_lang"
 fi
 
 echo ""

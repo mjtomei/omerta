@@ -1,0 +1,77 @@
+name: Update Commit Hash
+
+# Triggered by sub-repo CI after tests pass on master.
+# This is the only workflow allowed to push directly to master.
+# Configure a branch protection ruleset on master that:
+#   - Requires PRs for all pushes
+#   - Adds a bypass for the GitHub App or PAT used by PUSH_TOKEN
+
+on:
+  repository_dispatch:
+    types: [subrepo-updated]
+
+# Serialize to prevent concurrent .commit updates from racing
+concurrency:
+  group: update-commit
+  cancel-in-progress: false
+
+jobs:
+  update-commit:
+    name: Update ${{ github.event.client_payload.module }}/.commit
+    runs-on: ubuntu-latest
+
+    # Only act on payloads with the expected fields
+    if: >-
+      github.event.client_payload.module != '' &&
+      github.event.client_payload.sha != ''
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use a token that can bypass branch protection to push to master
+          token: ${{ secrets.PUSH_TOKEN }}
+
+      - name: Validate module name
+        run: |
+          MODULE="${{ github.event.client_payload.module }}"
+          case "$MODULE" in
+            omerta_node|omerta_mesh|omerta_lang|omerta_protocol|omerta_infra) ;;
+            *) echo "::error::Unknown module: $MODULE"; exit 1 ;;
+          esac
+
+      - name: Verify SHA is current master HEAD
+        run: |
+          MODULE="${{ github.event.client_payload.module }}"
+          SHA="${{ github.event.client_payload.sha }}"
+          REMOTE_SHA=$(git ls-remote "https://github.com/mjtomei/$MODULE" refs/heads/master | cut -f1)
+
+          if [ "$SHA" != "$REMOTE_SHA" ]; then
+            echo "::error::Payload SHA ${SHA:0:8} is not master HEAD ${REMOTE_SHA:0:8} — skipping"
+            exit 1
+          fi
+
+      - name: Update .commit file
+        run: |
+          MODULE="${{ github.event.client_payload.module }}"
+          SHA="${{ github.event.client_payload.sha }}"
+          CURRENT=$(cat "$MODULE/.commit" 2>/dev/null | tr -d '[:space:]')
+
+          if [ "$SHA" = "$CURRENT" ]; then
+            echo "$MODULE/.commit is already up to date (${SHA:0:8})"
+            echo "skip=true" >> $GITHUB_ENV
+          else
+            echo "$SHA" > "$MODULE/.commit"
+            echo "Updated $MODULE: ${CURRENT:0:8} -> ${SHA:0:8}"
+            echo "skip=false" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and push
+        if: env.skip != 'true'
+        run: |
+          MODULE="${{ github.event.client_payload.module }}"
+          SHA="${{ github.event.client_payload.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$MODULE/.commit"
+          git commit -m "Update $MODULE to ${SHA:0:8}"
+          git push origin master

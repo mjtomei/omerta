@@ -20,34 +20,32 @@ on:
       - 'plans/**'
       - '.gitignore'
 
-# This workflow verifies that submodule CI passed for the specific commits referenced.
+# This workflow verifies that sub-repo CI passed for the latest master commits.
 # Security checks run separately in security.yml.
 
 jobs:
-  # Verify submodule CI status for the exact commits referenced
-  check-submodule-ci:
-    name: Verify Submodule CI
+  check-subrepo-ci:
+    name: Verify Sub-Repo CI
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
 
-      - name: Get submodule commit SHAs
-        id: submodules
+      - name: Resolve latest master SHAs
+        id: shas
         run: |
-          echo "mesh_sha=$(git submodule status omerta_mesh | awk '{print $1}' | tr -d '+-')" >> $GITHUB_OUTPUT
-          echo "node_sha=$(git submodule status omerta_node | awk '{print $1}' | tr -d '+-')" >> $GITHUB_OUTPUT
-          echo "lang_sha=$(git submodule status omerta_lang | awk '{print $1}' | tr -d '+-')" >> $GITHUB_OUTPUT
-          echo "protocol_sha=$(git submodule status omerta_protocol | awk '{print $1}' | tr -d '+-')" >> $GITHUB_OUTPUT
+          for mod in mesh node lang protocol; do
+            sha=$(git ls-remote https://github.com/mjtomei/omerta_${mod} refs/heads/master | cut -f1)
+            echo "${mod}_sha=$sha" >> $GITHUB_OUTPUT
+            echo "omerta_${mod}: ${sha:0:8}"
+          done
 
       - name: Wait for omerta_mesh CI
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          SHA="${{ steps.submodules.outputs.mesh_sha }}"
+          SHA="${{ steps.shas.outputs.mesh_sha }}"
           echo "Waiting for omerta_mesh CI for commit ${SHA:0:8}..."
 
           MAX_ATTEMPTS=60  # 10 minutes max (60 * 10 seconds)
@@ -90,7 +88,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          SHA="${{ steps.submodules.outputs.node_sha }}"
+          SHA="${{ steps.shas.outputs.node_sha }}"
           echo "Waiting for omerta_node CI for commit ${SHA:0:8}..."
 
           MAX_ATTEMPTS=60
@@ -133,7 +131,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          SHA="${{ steps.submodules.outputs.lang_sha }}"
+          SHA="${{ steps.shas.outputs.lang_sha }}"
           echo "Waiting for omerta_lang CI for commit ${SHA:0:8}..."
 
           MAX_ATTEMPTS=60
@@ -176,7 +174,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          SHA="${{ steps.submodules.outputs.protocol_sha }}"
+          SHA="${{ steps.shas.outputs.protocol_sha }}"
           echo "Waiting for omerta_protocol CI for commit ${SHA:0:8}..."
 
           MAX_ATTEMPTS=60

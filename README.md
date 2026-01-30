@@ -58,7 +58,7 @@ The blockchain and economic layer is not yet functional. Current work is focused
 
 ## Repository Structure
 
-This is the top-level repository for the Omerta project. The codebase is organized into focused submodules:
+This is the top-level repository for the Omerta project. The codebase is organized into focused sub-repositories:
 
 ### [omerta_node](https://github.com/mjtomei/omerta_node)
 
@@ -126,14 +126,21 @@ Working documents for development - design docs, implementation plans, review cy
 
 ## Getting Started
 
-Clone with submodules:
+Clone the repository and populate sub-repos:
 ```bash
-git clone --recursive https://github.com/mjtomei/omerta.git
+git clone https://github.com/mjtomei/omerta.git
+cd omerta
+make
 ```
 
-Or initialize submodules after cloning:
+This clones each sub-repository into its stub directory. To pull latest changes:
 ```bash
-git submodule update --init --recursive
+make pull-all
+```
+
+To update `.commit` hashes to the latest remote master:
+```bash
+make update
 ```
 
 ### Running Tests

@@ -42,7 +42,7 @@ Currently migrating from a WireGuard-based VM-to-consumer link to a full virtual
 - **Network discovery** - Gossip-based peer discovery with multi-network support
 - **Infrastructure** - Terraform deployment for bootstrap servers with monitoring
 
-**In progress:** Virtual network implementation, consumer client and end-to-end flow, IPv6 NAT hole punching, macOS GUI, security hardening
+**In progress:** Consumer client and end-to-end flow, IPv6 NAT hole punching, macOS GUI. The virtual network layer and tunneling over the mesh both work independently as demos but are not yet integrated into omerta_node.
 
 ### Blockchain Protocol (early research prototype)
 
@@ -69,10 +69,10 @@ Swift application implementing provider and consumer nodes. Handles VM managemen
 
 ### [omerta_mesh](https://github.com/mjtomei/omerta_mesh)
 
-Peer-to-peer mesh networking layer. Handles NAT traversal, peer discovery, encrypted communication, and the wire protocol.
+Peer-to-peer mesh networking layer. Handles NAT traversal, peer discovery, encrypted communication, and virtual networking.
 
-- **Implementation**: ~17,000 lines of Swift with ~16,000 lines of tests
-- **Features**: ChaCha20-Poly1305 encryption, X25519 key exchange, channel-based messaging
+- **Implementation**: ~30,000 lines of Swift with ~27,000 lines of tests
+- **Features**: ChaCha20-Poly1305 encryption, X25519 key exchange, channel-based messaging, virtual network routing, DHCP
 - **Testing**: `swift test`
 
 ### [omerta_lang](https://github.com/mjtomei/omerta_lang)

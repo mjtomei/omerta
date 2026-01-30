@@ -3,29 +3,37 @@ name: Tests
 on:
   push:
     branches: [master]
-    paths-ignore:
-      - '**.md'
-      - '**.txt'
-      - 'LICENSE'
-      - 'licenses/**'
-      - 'plans/**'
-      - '.gitignore'
   pull_request:
     branches: [master]
-    paths-ignore:
-      - '**.md'
-      - '**.txt'
-      - 'LICENSE'
-      - 'licenses/**'
-      - 'plans/**'
-      - '.gitignore'
 
 # This workflow verifies that sub-repo CI passed for the latest master commits.
 # Security checks run separately in security.yml.
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - '**'
+              - '!**.md'
+              - '!**.txt'
+              - '!LICENSE'
+              - '!licenses/**'
+              - '!plans/**'
+              - '!.gitignore'
+
   check-subrepo-ci:
     name: Verify Sub-Repo CI
+    needs: [changes]
+    if: needs.changes.outputs.src == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

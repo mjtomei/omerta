@@ -46,7 +46,7 @@ ehthumbs.db
 .DS_Store
 
 # Sub-repo clones — ignore the entire directory.
-# .commit and REPO.md are tracked via `git add -f`.
+# .commit and README.md are tracked via `git add -f`.
 omerta_node/
 omerta_mesh/
 omerta_lang/

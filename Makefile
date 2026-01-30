@@ -11,7 +11,6 @@ all:
 			rm -rf "$$mod.tmp"; \
 			git clone "$(REPO_BASE)/$$mod" "$$mod.tmp"; \
 			mv "$$mod/.commit" "$$mod.tmp/.commit" 2>/dev/null || true; \
-			mv "$$mod/REPO.md" "$$mod.tmp/REPO.md" 2>/dev/null || true; \
 			rm -rf "$$mod"; \
 			mv "$$mod.tmp" "$$mod"; \
 		else \

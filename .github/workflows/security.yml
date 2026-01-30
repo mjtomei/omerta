@@ -19,7 +19,7 @@ jobs:
           for mod in omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh; do
             git clone --depth=1 "https://github.com/mjtomei/$mod" "${mod}.tmp"
             cp "${mod}/.commit" "${mod}.tmp/.commit" 2>/dev/null || true
-            cp "${mod}/REPO.md" "${mod}.tmp/REPO.md" 2>/dev/null || true
+
             rm -rf "$mod"
             mv "${mod}.tmp" "$mod"
           done
@@ -46,7 +46,7 @@ jobs:
           for mod in omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh; do
             git clone --depth=1 "https://github.com/mjtomei/$mod" "${mod}.tmp"
             cp "${mod}/.commit" "${mod}.tmp/.commit" 2>/dev/null || true
-            cp "${mod}/REPO.md" "${mod}.tmp/REPO.md" 2>/dev/null || true
+
             rm -rf "$mod"
             mv "${mod}.tmp" "$mod"
           done
@@ -101,7 +101,7 @@ jobs:
           for mod in omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh; do
             git clone --depth=1 "https://github.com/mjtomei/$mod" "${mod}.tmp"
             cp "${mod}/.commit" "${mod}.tmp/.commit" 2>/dev/null || true
-            cp "${mod}/REPO.md" "${mod}.tmp/REPO.md" 2>/dev/null || true
+
             rm -rf "$mod"
             mv "${mod}.tmp" "$mod"
           done

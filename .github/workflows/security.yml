@@ -14,9 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout public submodules
+      - name: Clone sub-repos
         run: |
-          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
+          for mod in omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh; do
+            git clone --depth=1 "https://github.com/mjtomei/$mod" "${mod}.tmp"
+            cp "${mod}/.commit" "${mod}.tmp/.commit" 2>/dev/null || true
+            cp "${mod}/REPO.md" "${mod}.tmp/REPO.md" 2>/dev/null || true
+            rm -rf "$mod"
+            mv "${mod}.tmp" "$mod"
+          done
 
       - name: Ensure hooks are executable
         run: |
@@ -35,12 +41,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout public submodules
+      - name: Clone sub-repos
         run: |
-          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
+          for mod in omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh; do
+            git clone --depth=1 "https://github.com/mjtomei/$mod" "${mod}.tmp"
+            cp "${mod}/.commit" "${mod}.tmp/.commit" 2>/dev/null || true
+            cp "${mod}/REPO.md" "${mod}.tmp/REPO.md" 2>/dev/null || true
+            rm -rf "$mod"
+            mv "${mod}.tmp" "$mod"
+          done
 
       - name: Verify hooks are in sync
         run: ./scripts/check-hooks-sync.sh
+
+  commit-hash-check:
+    name: Verify Commit Hashes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check .commit files match remote master
+        run: |
+          FAILED=0
+          for mod in omerta_node omerta_mesh omerta_lang omerta_protocol omerta_infra; do
+            remote_sha=$(git ls-remote "https://github.com/mjtomei/$mod" refs/heads/master | cut -f1)
+            local_sha=$(cat "$mod/.commit" 2>/dev/null | tr -d '[:space:]')
+
+            if [ -z "$remote_sha" ]; then
+              echo "WARNING: could not resolve master for $mod"
+              continue
+            fi
+
+            if [ "$remote_sha" != "$local_sha" ]; then
+              echo "::error::$mod/.commit is stale: have ${local_sha:0:8}, want ${remote_sha:0:8}"
+              FAILED=1
+            else
+              echo "OK: $mod (${local_sha:0:8})"
+            fi
+          done
+
+          if [ $FAILED -eq 1 ]; then
+            echo ""
+            echo "Run 'make update' to refresh .commit hashes"
+            exit 1
+          fi
+
+          echo "All .commit hashes are current"
 
   security-scan:
     name: Security Scan
@@ -49,9 +96,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout public submodules
+      - name: Clone sub-repos
         run: |
-          git submodule update --init --depth=1 omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh
+          for mod in omerta_infra omerta_lang omerta_protocol omerta_node omerta_mesh; do
+            git clone --depth=1 "https://github.com/mjtomei/$mod" "${mod}.tmp"
+            cp "${mod}/.commit" "${mod}.tmp/.commit" 2>/dev/null || true
+            cp "${mod}/REPO.md" "${mod}.tmp/REPO.md" 2>/dev/null || true
+            rm -rf "$mod"
+            mv "${mod}.tmp" "$mod"
+          done
 
       - name: Check for sensitive data patterns
         run: |

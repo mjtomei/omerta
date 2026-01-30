@@ -1,6 +1,6 @@
 name: Update Commit Hash
 
-# Triggered by sub-repo CI after tests pass on master.
+# Triggered by sub-repo CI on push to master.
 # This is the only workflow allowed to push directly to master.
 # Configure a branch protection ruleset on master that:
 #   - Requires PRs for all pushes
@@ -10,65 +10,49 @@ on:
   repository_dispatch:
     types: [subrepo-updated]
 
-jobs:
-  update-commit:
-    name: Update ${{ github.event.client_payload.module }}/.commit
-    runs-on: ubuntu-latest
+# Serialize so concurrent dispatches queue instead of racing
+concurrency:
+  group: update-commit
+  cancel-in-progress: false
 
-    # Only act on payloads with the expected fields
-    if: >-
-      github.event.client_payload.module != '' &&
-      github.event.client_payload.sha != ''
+jobs:
+  update-commits:
+    name: Update all .commit files
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
-          # Use a token that can bypass branch protection to push to master
           token: ${{ secrets.PUSH_TOKEN }}
 
-      - name: Validate module name
+      - name: Update all .commit files
         run: |
-          MODULE="${{ github.event.client_payload.module }}"
-          case "$MODULE" in
-            omerta_node|omerta_mesh|omerta_lang|omerta_protocol|omerta_infra) ;;
-            *) echo "::error::Unknown module: $MODULE"; exit 1 ;;
-          esac
+          MODULES="omerta_node omerta_mesh omerta_lang omerta_protocol omerta_infra"
+          changed=0
 
-      - name: Verify SHA is current master HEAD
-        run: |
-          MODULE="${{ github.event.client_payload.module }}"
-          SHA="${{ github.event.client_payload.sha }}"
-          REMOTE_SHA=$(git ls-remote "https://github.com/mjtomei/$MODULE" refs/heads/master | cut -f1)
+          for mod in $MODULES; do
+            remote_sha=$(git ls-remote "https://github.com/mjtomei/$mod" refs/heads/master | cut -f1)
+            if [ -z "$remote_sha" ]; then
+              echo "WARNING: could not resolve master for $mod"
+              continue
+            fi
 
-          if [ "$SHA" != "$REMOTE_SHA" ]; then
-            echo "::error::Payload SHA ${SHA:0:8} is not master HEAD ${REMOTE_SHA:0:8} — skipping"
-            exit 1
-          fi
+            current_sha=$(cat "$mod/.commit" 2>/dev/null | tr -d '[:space:]')
+            if [ "$remote_sha" != "$current_sha" ]; then
+              echo "$remote_sha" > "$mod/.commit"
+              git add -f "$mod/.commit"
+              echo "Updated $mod: ${current_sha:0:8} -> ${remote_sha:0:8}"
+              changed=1
+            else
+              echo "$mod is up to date (${current_sha:0:8})"
+            fi
+          done
 
-      - name: Update .commit file
-        run: |
-          MODULE="${{ github.event.client_payload.module }}"
-          SHA="${{ github.event.client_payload.sha }}"
-          CURRENT=$(cat "$MODULE/.commit" 2>/dev/null | tr -d '[:space:]')
-
-          if [ "$SHA" = "$CURRENT" ]; then
-            echo "$MODULE/.commit is already up to date (${SHA:0:8})"
-            echo "skip=true" >> $GITHUB_ENV
+          if [ $changed -eq 1 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Update .commit hashes to latest master"
+            git push origin master
           else
-            echo "$SHA" > "$MODULE/.commit"
-            echo "Updated $MODULE: ${CURRENT:0:8} -> ${SHA:0:8}"
-            echo "skip=false" >> $GITHUB_ENV
+            echo "All .commit files are current"
           fi
-
-      - name: Commit and push
-        if: env.skip != 'true'
-        run: |
-          MODULE="${{ github.event.client_payload.module }}"
-          SHA="${{ github.event.client_payload.sha }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f "$MODULE/.commit"
-          git commit -m "Update $MODULE to ${SHA:0:8}"
-          # Pull any commits pushed by concurrent update-commit runs
-          git pull --rebase origin master
-          git push origin master

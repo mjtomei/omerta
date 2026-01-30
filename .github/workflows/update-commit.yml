@@ -10,11 +10,6 @@ on:
   repository_dispatch:
     types: [subrepo-updated]
 
-# Serialize to prevent concurrent .commit updates from racing
-concurrency:
-  group: update-commit
-  cancel-in-progress: false
-
 jobs:
   update-commit:
     name: Update ${{ github.event.client_payload.module }}/.commit

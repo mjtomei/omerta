@@ -231,7 +231,7 @@ jobs:
       - name: Check for large files
         run: |
           LARGE_FILES=$(find . -type f -size +1M \
-            -not -path "./.git/*" \
+            -not -path "*/.git/*" \
             -not -path "./.venv/*" \
             -not -path "./.build/*" \
             -not -path "./node_modules/*" \

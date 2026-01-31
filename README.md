@@ -109,10 +109,11 @@ Infrastructure and deployment code for bootstrap servers.
 
 Polished documents intended for external consumption by humans and machines.
 
-- [Whitepaper](papers/whitepaper.pdf) - Technical whitepaper (Abstract, Introduction, Related Work)
-- [Full Paper](papers/participation-verification.pdf) - Complete technical paper with all sections
+- [Whitepaper](papers/protocol/whitepaper.pdf) - Technical whitepaper (Abstract, Introduction, Related Work)
+- [Full Paper](papers/protocol/participation-verification.pdf) - Complete technical paper with all sections
+- [Crypto Benchmark Report](papers/benchmarking/chacha20_parallel_benchmark.pdf) - ChaCha20-Poly1305 parallel encryption/decryption benchmarks
 
-LaTeX sources are in [papers/](papers/) with modular sections in [papers/sections/](papers/sections/).
+LaTeX sources are in [papers/protocol/](papers/protocol/) with modular sections in [papers/protocol/sections/](papers/protocol/sections/).
 
 ### Plans
 
